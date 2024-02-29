@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8.3",
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.suslovila.mixin",
+  "refmap": "mixins.examplemod.refmap.json",
+  "mixins": [
+
+  ],
+  "client": [],
+  "server": []
+}
+
+
