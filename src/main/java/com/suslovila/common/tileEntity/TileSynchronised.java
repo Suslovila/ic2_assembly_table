@@ -6,7 +6,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
-public abstract class TileSerialised extends TileEntity {
+public abstract class TileSynchronised extends TileEntity {
    public final void readFromNBT(NBTTagCompound nbttagcompound) {
       super.readFromNBT(nbttagcompound);
       this.readCustomNBT(nbttagcompound);
@@ -32,5 +32,18 @@ public abstract class TileSerialised extends TileEntity {
    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
       super.onDataPacket(net, pkt);
       this.readCustomNBT(pkt.getNbtCompound());
+   }
+
+   public void markSaveAndSync(){
+      markForSave();
+      markForSync();
+   }
+
+   public void markForSave() {
+      worldObj.markTileEntityChunkModified(xCoord, yCoord, zCoord, this);
+   }
+
+   public void markForSync() {
+      worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
    }
 }

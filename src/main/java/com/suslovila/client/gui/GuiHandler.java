@@ -2,7 +2,7 @@ package com.suslovila.client.gui;
 
 import com.suslovila.client.GuiIds;
 import com.suslovila.common.inventory.container.ContainerTest;
-import com.suslovila.common.tileEntity.TileTest;
+import com.suslovila.common.tileEntity.TileAssemblyTable;
 import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -19,10 +19,10 @@ public class GuiHandler implements IGuiHandler {
 
         switch (id) {
             case GuiIds.ASSEMBLE_TABLE:{
-                if (!(tile instanceof TileTest)) {
+                if (!(tile instanceof TileAssemblyTable)) {
                     return null;
                 }
-                return new ContainerTest(player.inventory, (TileTest)tile);
+                return new ContainerTest(player.inventory, (TileAssemblyTable)tile);
 
             }
         }
@@ -39,10 +39,10 @@ public class GuiHandler implements IGuiHandler {
 
         switch (id) {
             case GuiIds.ASSEMBLE_TABLE:{
-                if (!(tile instanceof TileTest)) {
+                if (!(tile instanceof TileAssemblyTable)) {
                     return null;
                 }
-                return new GuiTileTest(player.inventory, (TileTest)tile);
+                return new GuiAssemblyTable(player.inventory, (TileAssemblyTable)tile);
 
             }
         }

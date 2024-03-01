@@ -6,6 +6,7 @@ import com.suslovila.client.gui.GuiHandler;
 import com.suslovila.common.block.ModBlocks;
 import com.suslovila.common.event.FMLEventListener;
 import com.suslovila.common.item.ModItems;
+import com.suslovila.network.PacketHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -21,6 +22,7 @@ public class CommonProxy {
         //MinecraftForge.EVENT_BUS.register(SweetMixinListener());
         ModBlocks.register();
         ModItems.register();
+        PacketHandler.init();
     }
 
 

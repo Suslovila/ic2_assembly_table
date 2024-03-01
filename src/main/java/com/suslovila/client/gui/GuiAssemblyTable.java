@@ -1,19 +1,21 @@
 package com.suslovila.client.gui;
 
 import com.suslovila.ExampleMod;
-import com.suslovila.common.tileEntity.TileTest;
+import com.suslovila.common.tileEntity.TileAssemblyTable;
 import com.suslovila.common.inventory.container.ContainerTest;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
 
-public class GuiTileTest extends GuiContainer {
+public class GuiAssemblyTable extends GuiContainer {
     private static final ResourceLocation IMAGE_URL = new ResourceLocation(ExampleMod.MOD_ID, "textures/gui/assembly_table.png");
 
-    TileTest tile;
+    TileAssemblyTable tile;
 
-    public GuiTileTest(InventoryPlayer inventoryPlayer, TileTest assembleTable) {
+    public GuiAssemblyTable(InventoryPlayer inventoryPlayer, TileAssemblyTable assembleTable) {
         super(new ContainerTest(inventoryPlayer, assembleTable));
         xSize = 176;
         ySize = 207;
@@ -33,19 +35,25 @@ public class GuiTileTest extends GuiContainer {
     public void initGui() {
         super.initGui();
         //важно: id кнопок напрямую связаны с логикой выбора шаблона
-        for (int i = 0; i < TileTest.patternAmount; i++) {
-            GuiButton button = new GuiButtonInvisible(i, 100, 200, 100, 20, "");
+        for (int i = 0; i < TileAssemblyTable.patternAmount; i++) {
+            GuiButton button = new ButtonAssemblyTable(i, guiLeft + 17 + 18 * i, guiTop + 9, 16, 16, this);
             this.buttonList.add(button);
-            this.buttonList.add(new button(50 + 18 * j, 20 + 18 * i));
-
         }
     }
     @Override
     protected void actionPerformed(GuiButton button)
     {
-        if(button.id == 1)
-        {
-            System.out.println("My Button is Clicked!");
-        }
+    }
+    public RenderItem getItemRenderer() {
+        return itemRender;
+    }
+    public FontRenderer getFontRenderer() {
+        return fontRendererObj;
+    }
+    public int getGuiLeft(){
+        return guiLeft;
+    }
+    public int getGuiTop(){
+        return guiTop;
     }
 }

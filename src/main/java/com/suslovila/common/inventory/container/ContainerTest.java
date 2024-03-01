@@ -1,7 +1,7 @@
 package com.suslovila.common.inventory.container;
 
 import com.suslovila.common.inventory.container.slot.SlotOutput;
-import com.suslovila.common.tileEntity.TileTest;
+import com.suslovila.common.tileEntity.TileAssemblyTable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -9,9 +9,9 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 public class ContainerTest extends Container {
-    TileTest tile;
+    TileAssemblyTable tile;
 
-    public ContainerTest(InventoryPlayer inventoryPlayer, TileTest tile) {
+    public ContainerTest(InventoryPlayer inventoryPlayer, TileAssemblyTable tile) {
         this.tile = tile;
 
         for (int yOffset = 0; yOffset < 4; yOffset++) {

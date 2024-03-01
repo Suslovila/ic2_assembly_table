@@ -1,5 +1,6 @@
 package com.suslovila;
 
+import com.suslovila.api.crafting.RecipeRegistry;
 import com.suslovila.client.ClientProxy;
 import com.suslovila.client.gui.GuiHandler;
 import com.suslovila.common.CommonProxy;
@@ -40,7 +41,7 @@ public class ExampleMod {
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		proxy.preInit(event);
-
+		RecipeRegistry.instance.preInit();
 	}
 
 	@EventHandler
