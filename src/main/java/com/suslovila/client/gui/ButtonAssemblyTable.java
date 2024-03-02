@@ -9,9 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 class ButtonAssemblyTable extends GuiButton {
     private static final ResourceLocation TEXTURE = new ResourceLocation(ExampleMod.MOD_ID, "textures/gui/assembly_table.png");
@@ -31,20 +34,31 @@ class ButtonAssemblyTable extends GuiButton {
         if (pattern != null) {
             AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(pattern.recipeId);
             if (pattern.isActive) {
+                GL11.glEnable(GL11.GL_ALPHA_TEST);
                 mc.renderEngine.bindTexture(TEXTURE);
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                 drawTexturedModalRect(xPosition, yPosition, 196, 1, 16, 16);
+                this.zLevel = 100;
+                //GL11.glDisable(GL11.GL_LIGHTING);
 
             }
             if (recipe != null) {
-                drawStack(recipe.result, this.xPosition, this.yPosition);
+                drawStack(mc, recipe.result, this.xPosition, this.yPosition);
             }
 
         }
     }
 
-    public void drawStack(ItemStack item, int x, int y) {
-        Minecraft mc = Minecraft.getMinecraft();
-
+    public void drawStack(Minecraft mc, ItemStack item, int x, int y) {
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_TRANSFORM_BIT);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        int i1 = 240;
+        int k1 = 240;
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, i1 / 1.0F, k1 / 1.0F);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         if (item != null) {
             GL11.glEnable(GL11.GL_LIGHTING);
             float prevZ = gui.getItemRenderer().zLevel;
@@ -54,6 +68,9 @@ class ButtonAssemblyTable extends GuiButton {
             gui.getItemRenderer().zLevel = prevZ;
             GL11.glDisable(GL11.GL_LIGHTING);
         }
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+
     }
 
     public void drawButtonForegroundLayer(int mouseX, int mouseY) {

@@ -15,6 +15,10 @@ public class AssemblyTableRecipes {
     }
     public AssemblyTableRecipe addRecipe(String id, double cost, ItemStack res, ItemStack... inputs){
         AssemblyTableRecipe recipe = new AssemblyTableRecipe(cost, res, inputs);
+        if(recipes.containsKey(id)){
+            System.out.println("recipe with id " + id + " is already registered!!!");
+            return null;
+        }
         recipes.put(id, recipe);
         return recipe;
     }

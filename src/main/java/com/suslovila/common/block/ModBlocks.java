@@ -14,7 +14,7 @@ public class ModBlocks {
 
         GameRegistry.registerBlock(block, "test");
 
-        GameRegistry.registerTileEntity(TileAssemblyTable.class, "testTile");
+        GameRegistry.registerTileEntity(TileAssemblyTable.class, "assemble_table");
 
     }
 

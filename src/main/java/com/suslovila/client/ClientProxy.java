@@ -4,6 +4,7 @@ package com.suslovila.client;
 import com.suslovila.client.render.ClientEventHandler;
 import com.suslovila.common.CommonProxy;
 import com.suslovila.common.block.ModBlocks;
+import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -48,9 +49,7 @@ public class ClientProxy extends CommonProxy {
         //MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(block), ItemRenderer())
     }
 
-
-    public Object getServerGuiElement(int guiId, EntityPlayer player, World world, int x, int y, int z) {
-        return null;
+    public World getClientWorld() {
+        return FMLClientHandler.instance().getClient().theWorld;
     }
-
 }

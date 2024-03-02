@@ -34,7 +34,7 @@ public abstract class TileSynchronised extends TileEntity {
       this.readCustomNBT(pkt.getNbtCompound());
    }
 
-   public void markSaveAndSync(){
+   public void markForSaveAndSync(){
       markForSave();
       markForSync();
    }

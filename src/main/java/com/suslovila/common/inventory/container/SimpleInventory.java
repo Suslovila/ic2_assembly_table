@@ -179,11 +179,13 @@ public class SimpleInventory implements IInventory, INBTStoreable {
     @Override
     public void markDirty() {
         for (TileEntity handler : listeners) {
-            if (handler instanceof TileAssemblyTable) {
-                ((TileAssemblyTable) handler).updatePatterns(new ArrayList<>());
-            }
-            if (handler instanceof TileSynchronised) {
-                ((TileSynchronised) handler).markForSave();
+            if (handler.getWorld() != null) {
+                if (handler instanceof TileAssemblyTable) {
+                    ((TileAssemblyTable) handler).updateAvailablePatterns(new ArrayList<>());
+                }
+                if (handler instanceof TileSynchronised) {
+                    ((TileSynchronised) handler).markForSaveAndSync();
+                }
             }
         }
     }
