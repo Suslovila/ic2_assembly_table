@@ -37,15 +37,19 @@ class ButtonAssemblyTable extends GuiButton {
                 GL11.glEnable(GL11.GL_ALPHA_TEST);
                 mc.renderEngine.bindTexture(TEXTURE);
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                drawTexturedModalRect(xPosition, yPosition, 196, 1, 16, 16);
-                this.zLevel = 100;
-                //GL11.glDisable(GL11.GL_LIGHTING);
-
+                TileAssemblyTable.AssemblyTablePattern currentPattern = gui.tile.currentPattern;
+                if (currentPattern !=null &&  currentPattern.equals(pattern)) {
+                    drawTexturedModalRect(xPosition, yPosition, 196, 1, 16, 16);
+                } else if (gui.tile.canStillCraft(recipe)) {
+                    drawTexturedModalRect(xPosition, yPosition, 177, 1, 16, 16);
+                }
+                else{
+                    drawTexturedModalRect(xPosition, yPosition, 215, 1, 16, 16);
+                }
             }
             if (recipe != null) {
                 drawStack(mc, recipe.result, this.xPosition, this.yPosition);
             }
-
         }
     }
 
@@ -77,7 +81,7 @@ class ButtonAssemblyTable extends GuiButton {
     }
 
     public void playPressSound(SoundHandler soundHandlerIn) {
-        soundHandlerIn.playSound(PositionedSoundRecord.createPositionedSoundRecord(new ResourceLocation("gui.button.press"), 1.0F));
+        //soundHandlerIn.playSound(PositionedSoundRecord.createPositionedSoundRecord(new ResourceLocation("gui.button.press"), 1.0F));
     }
 
     public int getButtonWidth() {

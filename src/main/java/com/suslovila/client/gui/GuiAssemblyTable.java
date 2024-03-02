@@ -32,22 +32,22 @@ public class GuiAssemblyTable extends GuiContainer {
         int k = (this.width - this.xSize) / 2;
         int l = (this.height - this.ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
-        TileAssemblyTable.AssemblyTablePattern pattern = tile.getPatternById(0);
-        if (pattern != null) {
-            AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(pattern.recipeId);
-            if (pattern.isActive) {
-                //GL11.glEnable(GL11.GL_LIGHTING);
-                mc.renderEngine.bindTexture(IMAGE_URL);
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                drawTexturedModalRect(100, 100, 196, 1, 16, 16);
-                //GL11.glDisable(GL11.GL_LIGHTING);
-
-            }
-            if (recipe != null) {
-                drawStack(mc, recipe.result, 100, 100);
-            }
-
-        }
+//        TileAssemblyTable.AssemblyTablePattern pattern = tile.getPatternById(0);
+//        if (pattern != null) {
+//            AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(pattern.recipeId);
+//            if (pattern.isActive) {
+//                //GL11.glEnable(GL11.GL_LIGHTING);
+//                mc.renderEngine.bindTexture(IMAGE_URL);
+//                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+//                drawTexturedModalRect(100, 100, 196, 1, 16, 16);
+//                //GL11.glDisable(GL11.GL_LIGHTING);
+//
+//            }
+//            if (recipe != null) {
+//                drawStack(mc, recipe.result, 100, 100);
+//            }
+//
+//        }
     }
 
     public void drawStack(Minecraft mc, ItemStack item, int x, int y) {

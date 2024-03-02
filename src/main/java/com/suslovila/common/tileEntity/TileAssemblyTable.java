@@ -4,6 +4,7 @@ import com.suslovila.api.crafting.AssemblyTableRecipes;
 import com.suslovila.common.inventory.container.SimpleInventory;
 import com.suslovila.network.PacketHandler;
 import com.suslovila.network.packet.PacketUpdatePatterns;
+import com.suslovila.utils.collection.CollectionUtils;
 import com.suslovila.utils.nbt.INBTStoreable;
 import com.suslovila.utils.nbt.NBTHelper;
 import cpw.mods.fml.common.network.NetworkRegistry;
@@ -28,7 +29,7 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
 
     public static final int maxAvailableDistanceToPlayer = 64;
 
-    public Short currentPatternId = null;
+    public AssemblyTablePattern currentPattern = null;
     public List<AssemblyTablePattern> patterns = new ArrayList<>();
 
     public TileAssemblyTable() {
@@ -40,12 +41,13 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
         super.updateEntity();
         if (worldObj.isRemote) return;
         updateAvailablePatterns(new ArrayList<>());
-        if (worldObj.getTotalWorldTime() % 50 == 0) observeAvailableCrafts();
+        observeAvailableCrafts();
         TESTING();
+        updateCurrentPattern();
     }
 
     private void TESTING() {
-        euBuffer += 1000;
+        euBuffer += 15;
     }
 
     //excludedRecipes will not be added while this check (used to walk throw available recipes)
@@ -70,13 +72,15 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
 
 
     private void observeAvailableCrafts() {
-        AssemblyTablePattern currentPattern = patterns.get(currentPatternId);
+        if (currentPattern == null) return;
         AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(currentPattern.recipeId);
         if (!canStillCraft(recipe)) {
-
+            setNextCurrentPattern();
+            return;
         }
         if (euBuffer >= recipe.energyCost) {
             craft(recipe);
+            setNextCurrentPattern();
         }
     }
 
@@ -119,8 +123,10 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             patternsNbtList.appendTag(patternNbt);
         }
         rootNbt.setTag(PATTERNS_NBT, patternsNbtList);
-        if (currentPatternId != null) {
-            rootNbt.setShort(CURRENT_PATTERN_NBT, currentPatternId);
+        if (currentPattern != null) {
+            NBTTagCompound currentPatternNbt = new NBTTagCompound();
+            currentPattern.writeToNBT(currentPatternNbt);
+            rootNbt.setTag(CURRENT_PATTERN_NBT, currentPatternNbt);
         }
     }
 
@@ -137,9 +143,9 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             }
             this.patterns = readPatterns;
             if (rootNbt.hasKey(CURRENT_PATTERN_NBT)) {
-                currentPatternId = rootNbt.getShort(CURRENT_PATTERN_NBT);
+                currentPattern = new AssemblyTablePattern((NBTTagCompound) rootNbt.getTag(CURRENT_PATTERN_NBT));
             } else {
-                currentPatternId = null;
+                currentPattern = null;
             }
         }
     }
@@ -230,7 +236,11 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
 
     public String removePatternNoUpdate(int index) {
         String removed = patterns.get(index).recipeId;
-        patterns.remove(index);
+        AssemblyTablePattern removedPattern = patterns.remove(index);
+        if (removedPattern.equals(currentPattern)) {
+            currentPattern = null;
+            setNextCurrentPattern();
+        }
         markForSaveAndSync();
         forceSyncPatterns();
         return removed;
@@ -261,36 +271,49 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
     public void forceSyncPatterns() {
         if (!worldObj.isRemote) {
             PacketHandler.INSTANCE.sendToAllAround(
-                    new PacketUpdatePatterns(xCoord, yCoord, zCoord, patterns, currentPatternId),
+                    new PacketUpdatePatterns(xCoord, yCoord, zCoord, patterns, currentPattern),
                     new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
         }
     }
 
     public void updateCurrentPattern() {
-        if(patterns.contains())
-        for(int index = 0; index < patterns.size(); index++){
-            AssemblyTablePattern
-        }
-        AssemblyTablePattern foundPattern = patterns.stream().filter(pattern -> pattern.isActive).findFirst().orElse(null);
-        if (foundPattern != null) {
-            currentPatternId = (Short) patterns.indexOf(foundPattern);
-        }
-
-    }
-
-    //TRIES to set next pattern from active ones
-    public void setNextCurrentPattern() {
-        if(currentPatternId == null) return;
-        for(int index = 0; index < patterns.size(); index++){
-            if(index != currentPatternId){
-                if(patterns.get(index).isActive)
+        if (currentPattern == null) {
+            for (AssemblyTablePattern pattern : patterns) {
+                if (canStillCraft(pattern.recipeId) && pattern.isActive) {
+                    currentPattern = pattern;
+                    forceSyncPatterns();
+                    return;
+                }
             }
         }
     }
 
-    @Override
-    public boolean canUpdate() {
-        return true;
+    //TRIES to set next pattern from active ones
+    public void setNextCurrentPattern() {
+        List<Integer> patternIndices;
+        //in order to provide cyclic iteration, list is initialised in different ways
+        if (currentPattern == null) {
+            patternIndices = CollectionUtils.getNumbersInRange(0, patterns.size());
+        } else {
+            int currentPatternIndex = patterns.indexOf(currentPattern);
+            patternIndices = CollectionUtils.getNumbersInRange(currentPatternIndex + 1, patterns.size());
+            patternIndices.addAll(CollectionUtils.getNumbersInRange(0, currentPatternIndex));
+        }
+        for (int patternIndex : patternIndices) {
+            AssemblyTablePattern iteratePattern = patterns.get(patternIndex);
+            if (iteratePattern.isActive && canStillCraft(iteratePattern.recipeId)) {
+                currentPattern = iteratePattern;
+                forceSyncPatterns();
+                return;
+            }
+        }
+        //if we are here, it means currentPattern wasn't switched. Maybe now we can't craft anything
+        if(currentPattern != null){
+            if(!canStillCraft(currentPattern.recipeId)){
+                currentPattern = null;
+                forceSyncPatterns();
+            }
+        }
     }
 
 
@@ -329,6 +352,13 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
         @Override
         public String toString() {
             return String.valueOf(isActive);
+        }
+
+        @Override
+        public boolean equals(Object pattern) {
+            if (!(pattern instanceof AssemblyTablePattern)) return false;
+            return Objects.equals(this.recipeId, ((AssemblyTablePattern) pattern).recipeId) &&
+                    this.isActive == ((AssemblyTablePattern) pattern).isActive;
         }
     }
 }

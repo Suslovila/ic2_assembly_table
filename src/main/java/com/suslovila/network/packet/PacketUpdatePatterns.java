@@ -16,26 +16,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PacketUpdatePatterns implements IMessage {
-    Short currentPatternId;
-    List<TileAssemblyTable.AssemblyTablePattern> patterns;
     int x;
     int y;
     int z;
+    TileAssemblyTable.AssemblyTablePattern currentPattern;
+    List<TileAssemblyTable.AssemblyTablePattern> patterns;
 
     public PacketUpdatePatterns() {
 
     }
 
-    public PacketUpdatePatterns(int x, int y, int z, List<TileAssemblyTable.AssemblyTablePattern> patterns, Short currentPatternId) {
+    public PacketUpdatePatterns(int x, int y, int z, List<TileAssemblyTable.AssemblyTablePattern> patterns, TileAssemblyTable.AssemblyTablePattern currentPattern) {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.currentPatternId = currentPatternId;
+        this.currentPattern = currentPattern;
         this.patterns = patterns;
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
+    public void toBytes(ByteBuf buf) {
         buf.writeInt(x);
         buf.writeInt(y);
         buf.writeInt(z);
@@ -45,16 +45,16 @@ public class PacketUpdatePatterns implements IMessage {
             ByteBufUtils.writeUTF8String(buf, pattern.recipeId);
             buf.writeBoolean(pattern.isActive);
         }
-        if (currentPatternId == null) {
+        if (currentPattern == null) {
             buf.writeBoolean(false);
         } else {
             buf.writeBoolean(true);
-            buf.writeInt(currentPatternId);
+            ByteBufUtils.writeUTF8String(buf, currentPattern.recipeId);
         }
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
+    public void fromBytes(ByteBuf buf) {
         x = buf.readInt();
         y = buf.readInt();
         z = buf.readInt();
@@ -62,18 +62,18 @@ public class PacketUpdatePatterns implements IMessage {
         int amount = buf.readInt();
         List<TileAssemblyTable.AssemblyTablePattern> readPatterns = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
-            TileAssemblyTable.AssemblyTablePattern pattern =
-                    new TileAssemblyTable.AssemblyTablePattern(
-                            ByteBufUtils.readUTF8String(buf),
-                            buf.readBoolean()
-                    );
+            String recipeId = ByteBufUtils.readUTF8String(buf);
+            boolean isActive = buf.readBoolean();
+            TileAssemblyTable.AssemblyTablePattern pattern = new TileAssemblyTable.AssemblyTablePattern(recipeId, isActive);
             readPatterns.add(pattern);
         }
-        boolean notNull = buf.readBoolean();
-        if (notNull) {
-            currentPatternId = buf.readShort();
+        patterns = readPatterns;
+        boolean currentPatternNotNull = buf.readBoolean();
+        if (currentPatternNotNull) {
+            String recipeId = ByteBufUtils.readUTF8String(buf);
+            currentPattern = new TileAssemblyTable.AssemblyTablePattern(recipeId, true);
         } else {
-            currentPatternId = null;
+            currentPattern = null;
         }
     }
 
@@ -86,7 +86,7 @@ public class PacketUpdatePatterns implements IMessage {
                 TileEntity tile = world.getTileEntity(packet.x, packet.y, packet.z);
                 if (tile instanceof TileAssemblyTable) {
                     ((TileAssemblyTable) tile).patterns = packet.patterns;
-                    ((TileAssemblyTable) tile).currentPatternId = packet.currentPatternId;
+                    ((TileAssemblyTable) tile).currentPattern = packet.currentPattern;
                 }
             }
             return null;
