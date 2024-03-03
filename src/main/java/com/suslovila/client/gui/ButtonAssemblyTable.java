@@ -6,7 +6,6 @@ import com.suslovila.common.tileEntity.TileAssemblyTable;
 import com.suslovila.network.PacketHandler;
 import com.suslovila.network.packet.PacketAssemblyTableRecipeSelected;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -18,7 +17,9 @@ import org.lwjgl.opengl.GL12;
 
 class ButtonAssemblyTable extends GuiButton {
     private static final ResourceLocation TEXTURE = new ResourceLocation(ExampleMod.MOD_ID, "textures/gui/assembly_table.png");
-
+    private static final int patternIsCurrentXPos = 196;
+    private static final int patternCanStillCraftXPos = 177;
+    private static final int patternCannotCraftXPos = 215;
 
     GuiAssemblyTable gui;
 
@@ -37,15 +38,17 @@ class ButtonAssemblyTable extends GuiButton {
                 GL11.glEnable(GL11.GL_ALPHA_TEST);
                 mc.renderEngine.bindTexture(TEXTURE);
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                int patternStateXPos = 0;
                 TileAssemblyTable.AssemblyTablePattern currentPattern = gui.tile.currentPattern;
-                if (currentPattern !=null &&  currentPattern.equals(pattern)) {
-                    drawTexturedModalRect(xPosition, yPosition, 196, 1, 16, 16);
+                if (currentPattern != null && currentPattern.equals(pattern)) {
+                    patternStateXPos = patternIsCurrentXPos;
                 } else if (gui.tile.canStillCraft(recipe)) {
-                    drawTexturedModalRect(xPosition, yPosition, 177, 1, 16, 16);
+                    patternStateXPos = patternCanStillCraftXPos;
+                } else {
+                    patternStateXPos = patternCannotCraftXPos;
                 }
-                else{
-                    drawTexturedModalRect(xPosition, yPosition, 215, 1, 16, 16);
-                }
+                drawTexturedModalRect(xPosition, yPosition, patternStateXPos, 1, 16, 16);
+
             }
             if (recipe != null) {
                 drawStack(mc, recipe.result, this.xPosition, this.yPosition);

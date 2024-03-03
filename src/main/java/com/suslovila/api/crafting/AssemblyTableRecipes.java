@@ -13,8 +13,8 @@ public class AssemblyTableRecipes {
     public static AssemblyTableRecipes instance() {
         return INSTANCE;
     }
-    public AssemblyTableRecipe addRecipe(String id, double cost, ItemStack res, ItemStack... inputs){
-        AssemblyTableRecipe recipe = new AssemblyTableRecipe(cost, res, inputs);
+    public AssemblyTableRecipe addRecipe(String id, double energyCost, ItemStack res, ItemStack... inputs){
+        AssemblyTableRecipe recipe = new AssemblyTableRecipe(energyCost, res, inputs);
         if(recipes.containsKey(id)){
             System.out.println("recipe with id " + id + " is already registered!!!");
             return null;

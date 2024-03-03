@@ -1,9 +1,8 @@
 package com.suslovila.client.gui;
 
 import com.suslovila.ExampleMod;
-import com.suslovila.api.crafting.AssemblyTableRecipes;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
-import com.suslovila.common.inventory.container.ContainerTest;
+import com.suslovila.common.inventory.container.ContainerAssemblyTable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -20,7 +19,7 @@ public class GuiAssemblyTable extends GuiContainer {
     TileAssemblyTable tile;
 
     public GuiAssemblyTable(InventoryPlayer inventoryPlayer, TileAssemblyTable assembleTable) {
-        super(new ContainerTest(inventoryPlayer, assembleTable));
+        super(new ContainerAssemblyTable(inventoryPlayer, assembleTable));
         xSize = 176;
         ySize = 207;
         tile = assembleTable;
@@ -32,22 +31,11 @@ public class GuiAssemblyTable extends GuiContainer {
         int k = (this.width - this.xSize) / 2;
         int l = (this.height - this.ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
-//        TileAssemblyTable.AssemblyTablePattern pattern = tile.getPatternById(0);
-//        if (pattern != null) {
-//            AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(pattern.recipeId);
-//            if (pattern.isActive) {
-//                //GL11.glEnable(GL11.GL_LIGHTING);
-//                mc.renderEngine.bindTexture(IMAGE_URL);
-//                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//                drawTexturedModalRect(100, 100, 196, 1, 16, 16);
-//                //GL11.glDisable(GL11.GL_LIGHTING);
-//
-//            }
-//            if (recipe != null) {
-//                drawStack(mc, recipe.result, 100, 100);
-//            }
-//
-//        }
+
+        int h = tile.getProgressScaled(70);
+
+        drawTexturedModalRect(guiLeft + 86, guiTop + 36 + 70 - h, 176, 18, 4, h);
+
     }
 
     public void drawStack(Minecraft mc, ItemStack item, int x, int y) {

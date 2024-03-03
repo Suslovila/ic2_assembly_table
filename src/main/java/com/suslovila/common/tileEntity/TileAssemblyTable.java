@@ -3,7 +3,10 @@ package com.suslovila.common.tileEntity;
 import com.suslovila.api.crafting.AssemblyTableRecipes;
 import com.suslovila.common.inventory.container.SimpleInventory;
 import com.suslovila.network.PacketHandler;
+import com.suslovila.network.packet.PacketUpdateEnergy;
 import com.suslovila.network.packet.PacketUpdatePatterns;
+import com.suslovila.utils.InventoryUtils;
+import com.suslovila.utils.StackHelper;
 import com.suslovila.utils.collection.CollectionUtils;
 import com.suslovila.utils.nbt.INBTStoreable;
 import com.suslovila.utils.nbt.NBTHelper;
@@ -11,21 +14,25 @@ import cpw.mods.fml.common.network.NetworkRegistry;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.*;
 
-public class TileAssemblyTable extends TileSynchronised implements IInventory {
-    SimpleInventory inventory = new SimpleInventory(getSizeInventory(), "inv", 64);
+public class TileAssemblyTable extends TileSynchronised implements ISidedInventory {
+    SimpleInventory inventory = new SimpleInventory(getSizeInventory(), getOutputSlotsAmount(), "inv", 64);
     private static final int inventorySize = 24;
     private static final int inputSlotsAmount = 12;
     public static final int patternAmount = 8;
     public double euBuffer = 0.0;
-    public int bufferCapacity;
+    public static final int bufferCapacity = 1000;
     public static final String PATTERNS_NBT = "patterns";
     public static final String CURRENT_PATTERN_NBT = "currentPattern";
+    public static final String ENERGY_NBT = "energyAmount";
+
 
     public static final int maxAvailableDistanceToPlayer = 64;
 
@@ -48,7 +55,10 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
 
     private void TESTING() {
         euBuffer += 15;
+        euBuffer = Math.min(euBuffer, bufferCapacity);
+        forceSyncEnergy();
     }
+
 
     //excludedRecipes will not be added while this check (used to walk throw available recipes)
     public void updateAvailablePatterns(Collection<String> excludedRecipes) {
@@ -128,12 +138,12 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             currentPattern.writeToNBT(currentPatternNbt);
             rootNbt.setTag(CURRENT_PATTERN_NBT, currentPatternNbt);
         }
+        rootNbt.setDouble(ENERGY_NBT, euBuffer);
     }
 
     public void readCustomNBT(NBTTagCompound rootNbt) {
         inventory.readFromNBT(rootNbt);
         if (rootNbt.hasKey(PATTERNS_NBT)) {
-            //this.patterns.clear();
             ArrayList<AssemblyTablePattern> readPatterns = new ArrayList<>();
             NBTTagList patternsNbt = rootNbt.getTagList(PATTERNS_NBT, NBTHelper.TAG_COMPOUND);
             for (int i = 0; i < patternsNbt.tagCount(); i++) {
@@ -147,6 +157,7 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             } else {
                 currentPattern = null;
             }
+            euBuffer = rootNbt.getDouble(ENERGY_NBT);
         }
     }
 
@@ -239,9 +250,8 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
         AssemblyTablePattern removedPattern = patterns.remove(index);
         if (removedPattern.equals(currentPattern)) {
             currentPattern = null;
-            setNextCurrentPattern();
         }
-        markForSaveAndSync();
+        markForSave();
         forceSyncPatterns();
         return removed;
     }
@@ -254,15 +264,16 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
         return null;
     }
 
+
     public void activatePattern(int index) {
         patterns.get(index).isActive = true;
-        markForSaveAndSync();
+        markForSave();
         forceSyncPatterns();
     }
 
     public void addPattern(String recipeId) {
         this.patterns.add(new AssemblyTablePattern(recipeId, false));
-        this.markForSaveAndSync();
+        markForSave();
         forceSyncPatterns();
     }
 
@@ -276,11 +287,20 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
         }
     }
 
+    public void forceSyncEnergy() {
+        if (!worldObj.isRemote) {
+            PacketHandler.INSTANCE.sendToAllAround(
+                    new PacketUpdateEnergy(xCoord, yCoord, zCoord, euBuffer),
+                    new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
+        }
+    }
+
     public void updateCurrentPattern() {
         if (currentPattern == null) {
             for (AssemblyTablePattern pattern : patterns) {
                 if (canStillCraft(pattern.recipeId) && pattern.isActive) {
                     currentPattern = pattern;
+                    markForSave();
                     forceSyncPatterns();
                     return;
                 }
@@ -289,7 +309,9 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
     }
 
     //TRIES to set next pattern from active ones
-    public void setNextCurrentPattern() {
+    //returns true if pattern was changed
+    //false - nothing was changed
+    public boolean setNextCurrentPattern() {
         List<Integer> patternIndices;
         //in order to provide cyclic iteration, list is initialised in different ways
         if (currentPattern == null) {
@@ -303,17 +325,40 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             AssemblyTablePattern iteratePattern = patterns.get(patternIndex);
             if (iteratePattern.isActive && canStillCraft(iteratePattern.recipeId)) {
                 currentPattern = iteratePattern;
+                markForSave();
                 forceSyncPatterns();
-                return;
+                return true;
             }
         }
         //if we are here, it means currentPattern wasn't switched. Maybe now we can't craft anything
-        if(currentPattern != null){
-            if(!canStillCraft(currentPattern.recipeId)){
+        if (currentPattern != null) {
+            if (!canStillCraft(currentPattern.recipeId)) {
                 currentPattern = null;
+                markForSave();
                 forceSyncPatterns();
+                return true;
             }
         }
+        return false;
+    }
+
+    public int getProgressScaled(int pixels) {
+        return (int) (euBuffer / bufferCapacity * pixels);
+    }
+
+    @Override
+    public int[] getSlotsForFace(int side) {
+        return InventoryUtils.createSlotArray(0, inventory.getSizeInventory());
+    }
+
+    @Override
+    public boolean canInsertItem(int slotIndex, ItemStack stack, int side) {
+        return slotIndex < getSizeInventory() - getInputSlotAmount();
+    }
+
+    @Override
+    public boolean canExtractItem(int slotIndex, ItemStack stack, int side) {
+        return slotIndex >= getSizeInventory() - getInputSlotAmount();
     }
 
 
@@ -359,6 +404,37 @@ public class TileAssemblyTable extends TileSynchronised implements IInventory {
             if (!(pattern instanceof AssemblyTablePattern)) return false;
             return Objects.equals(this.recipeId, ((AssemblyTablePattern) pattern).recipeId) &&
                     this.isActive == ((AssemblyTablePattern) pattern).isActive;
+        }
+    }
+
+    protected void outputStack(ItemStack remaining, IInventory inv, int slot, boolean autoEject) {
+        if (autoEject) {
+            if (remaining != null && remaining.stackSize > 0) {
+                remaining.stackSize -= Utils
+                        .addToRandomInventoryAround(worldObj, xCoord, yCoord, zCoord, remaining);
+            }
+
+            if (remaining != null && remaining.stackSize > 0) {
+                remaining.stackSize -= Utils.addToRandomInjectableAround(worldObj, xCoord, yCoord, zCoord, ForgeDirection.UNKNOWN, remaining);
+            }
+        }
+
+        if (inv != null && remaining != null && remaining.stackSize > 0) {
+            ItemStack inside = inv.getStackInSlot(slot);
+
+            if (inside == null || inside.stackSize <= 0) {
+                inv.setInventorySlotContents(slot, remaining);
+                return;
+            } else if (StackHelper.canStacksMerge(inside, remaining)) {
+                remaining.stackSize -= StackHelper.mergeStacks(remaining, inside, true);
+            }
+        }
+
+        if (remaining != null && remaining.stackSize > 0) {
+            EntityItem entityitem = new EntityItem(worldObj, xCoord + 0.5, yCoord + 0.7, zCoord + 0.5,
+                    remaining);
+
+            worldObj.spawnEntityInWorld(entityitem);
         }
     }
 }
