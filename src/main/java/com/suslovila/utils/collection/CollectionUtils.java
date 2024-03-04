@@ -1,6 +1,7 @@
 package com.suslovila.utils.collection;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CollectionUtils {
@@ -10,5 +11,9 @@ public class CollectionUtils {
             result.add(i);
         }
         return result;
+    }
+    public static<T> List<T> shuffle(List<T> list){
+        Collections.shuffle(list);
+        return list;
     }
 }

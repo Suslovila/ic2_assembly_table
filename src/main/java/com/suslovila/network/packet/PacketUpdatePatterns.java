@@ -2,7 +2,6 @@ package com.suslovila.network.packet;
 
 import com.suslovila.ExampleMod;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
-import com.suslovila.utils.SusVec3;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;

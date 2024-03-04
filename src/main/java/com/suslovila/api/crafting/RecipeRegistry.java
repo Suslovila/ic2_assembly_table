@@ -18,7 +18,6 @@ public final class RecipeRegistry {
         AssemblyTableRecipes.instance().addRecipe("rthrthdfgdfv", 500, new ItemStack(Items.beef, 1), new ItemStack(Items.emerald, 1));
         AssemblyTableRecipes.instance().addRecipe("ilio;op;", 500, new ItemStack(Items.chicken, 1), new ItemStack(Items.arrow, 1));
         AssemblyTableRecipes.instance().addRecipe("tgecdfgdgrg", 500, new ItemStack(Items.gunpowder, 1), new ItemStack(Items.blaze_powder, 1));
-        AssemblyTableRecipes.instance().addRecipe("trhrsdwqdsqwdsq", 500, new ItemStack(Items.porkchop, 1), new ItemStack(Items.sugar, 1));
-
+        AssemblyTableRecipes.instance().addRecipe("trhrsdwqdsqwdsq", 500, new ItemStack(Items.porkchop, 1), new ItemStack(Items.sugar, 1), new ItemStack(Items.blaze_powder, 1));
     }
 }

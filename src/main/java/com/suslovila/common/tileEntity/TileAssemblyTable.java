@@ -6,7 +6,6 @@ import com.suslovila.network.PacketHandler;
 import com.suslovila.network.packet.PacketUpdateEnergy;
 import com.suslovila.network.packet.PacketUpdatePatterns;
 import com.suslovila.utils.InventoryUtils;
-import com.suslovila.utils.StackHelper;
 import com.suslovila.utils.collection.CollectionUtils;
 import com.suslovila.utils.nbt.INBTStoreable;
 import com.suslovila.utils.nbt.NBTHelper;
@@ -18,11 +17,12 @@ import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.tileentity.TileEntity;
 
 import java.util.*;
 
 public class TileAssemblyTable extends TileSynchronised implements ISidedInventory {
+    //todo: сделать поля-маркеры на разные виды синхронизации, дабы не вызывать несколько раз одно и то же
     SimpleInventory inventory = new SimpleInventory(getSizeInventory(), getOutputSlotsAmount(), "inv", 64);
     private static final int inventorySize = 24;
     private static final int inputSlotsAmount = 12;
@@ -32,10 +32,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public static final String PATTERNS_NBT = "patterns";
     public static final String CURRENT_PATTERN_NBT = "currentPattern";
     public static final String ENERGY_NBT = "energyAmount";
-
-
     public static final int maxAvailableDistanceToPlayer = 64;
-
     public AssemblyTablePattern currentPattern = null;
     public List<AssemblyTablePattern> patterns = new ArrayList<>();
 
@@ -46,11 +43,16 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
 
     public void updateEntity() {
         super.updateEntity();
-        if (worldObj.isRemote) return;
+        if (worldObj.isRemote) {
+            return;
+        }
         updateAvailablePatterns(new ArrayList<>());
         observeAvailableCrafts();
         TESTING();
         updateCurrentPattern();
+        if (worldObj.getWorldTime() % 25 == 0) {
+            markForSync();
+        }
     }
 
     private void TESTING() {
@@ -68,7 +70,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             AssemblyTablePattern pattern = copyPatterns.get(i);
             boolean canStillCraft = this.canStillCraft(pattern.recipeId);
             if (!pattern.isActive && !canStillCraft) {
-                removePatternNoUpdate(i);
+                removePatternNoUpdate(pattern);
             }
         }
 
@@ -108,7 +110,31 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     }
 
     private void outPutCraftingResult(AssemblyTableRecipes.AssemblyTableRecipe recipe) {
+        if (worldObj.isRemote) return;
         ItemStack toOutput = recipe.result.copy();
+        List<Integer> offsets = Arrays.asList(-1, 0, 1);
+        for (int xOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
+            for (int yOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
+                for (int zOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
+                    if (xOffset == 0 && yOffset == 0 && zOffset == 0) {
+                        continue;
+                    }
+                    TileEntity tile = worldObj.getTileEntity(xCoord + xOffset, yCoord + yOffset, zCoord + zOffset);
+                    if (tile instanceof IInventory) {
+                        toOutput = InventoryUtils.placeItemStackIntoInventory(toOutput, (IInventory) tile, -1, true, false, 0);
+                        //if empty
+                        if (toOutput == null) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        //if something is left
+        toOutput = InventoryUtils.placeItemStackIntoInventory(toOutput, this, 1, true, true, getOutputSlotsAmount());
+        if (toOutput == null) {
+            return;
+        }
         EntityItem entityitem = new EntityItem(worldObj, xCoord + 0.5, yCoord + 0.7, zCoord + 0.5,
                 toOutput);
         worldObj.spawnEntityInWorld(entityitem);
@@ -244,7 +270,15 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         updateAvailablePatterns(Collections.singletonList(removed));
         return removed;
     }
-
+    public String removePatternNoUpdate(AssemblyTablePattern patternToRemove) {
+        patterns.remove(patternToRemove);
+        if (patternToRemove.equals(currentPattern)) {
+            currentPattern = null;
+        }
+        markForSave();
+        forceSyncPatterns();
+        return patternToRemove.recipeId;
+    }
     public String removePatternNoUpdate(int index) {
         String removed = patterns.get(index).recipeId;
         AssemblyTablePattern removedPattern = patterns.remove(index);
@@ -342,7 +376,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         return false;
     }
 
-    public int getProgressScaled(int pixels) {
+    public int getEnergyScaled(int pixels) {
         return (int) (euBuffer / bufferCapacity * pixels);
     }
 
@@ -407,34 +441,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         }
     }
 
-    protected void outputStack(ItemStack remaining, IInventory inv, int slot, boolean autoEject) {
-        if (autoEject) {
-            if (remaining != null && remaining.stackSize > 0) {
-                remaining.stackSize -= Utils
-                        .addToRandomInventoryAround(worldObj, xCoord, yCoord, zCoord, remaining);
-            }
-
-            if (remaining != null && remaining.stackSize > 0) {
-                remaining.stackSize -= Utils.addToRandomInjectableAround(worldObj, xCoord, yCoord, zCoord, ForgeDirection.UNKNOWN, remaining);
-            }
-        }
-
-        if (inv != null && remaining != null && remaining.stackSize > 0) {
-            ItemStack inside = inv.getStackInSlot(slot);
-
-            if (inside == null || inside.stackSize <= 0) {
-                inv.setInventorySlotContents(slot, remaining);
-                return;
-            } else if (StackHelper.canStacksMerge(inside, remaining)) {
-                remaining.stackSize -= StackHelper.mergeStacks(remaining, inside, true);
-            }
-        }
-
-        if (remaining != null && remaining.stackSize > 0) {
-            EntityItem entityitem = new EntityItem(worldObj, xCoord + 0.5, yCoord + 0.7, zCoord + 0.5,
-                    remaining);
-
-            worldObj.spawnEntityInWorld(entityitem);
-        }
+    public boolean hasEnough(ItemStack requiredItemStack) {
+        return inventory.hasEnough(requiredItemStack);
     }
 }

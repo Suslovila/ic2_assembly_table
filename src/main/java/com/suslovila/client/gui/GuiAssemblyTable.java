@@ -32,7 +32,7 @@ public class GuiAssemblyTable extends GuiContainer {
         int l = (this.height - this.ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
 
-        int h = tile.getProgressScaled(70);
+        int h = tile.getEnergyScaled(70);
 
         drawTexturedModalRect(guiLeft + 86, guiTop + 36 + 70 - h, 176, 18, 4, h);
 

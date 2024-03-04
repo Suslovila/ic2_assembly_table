@@ -28,17 +28,18 @@ public class ContainerAssemblyTable extends Container {
                 addSlotToContainer(new SlotOutput(tile, tile.getInputSlotAmount() + xOffset + yOffset * 3, 8 + xOffset * 18 + textureShift, 36 + yOffset * 18));
             }
         }
-        //Player's hotbar
         //todo: вынести функцию создания хотбара игрока
-        for (int l = 0; l < 3; l++) {
-            for (int k1 = 0; k1 < 9; k1++) {
-                addSlotToContainer(new Slot(inventoryPlayer, k1 + l * 9 + 9, 8 + k1 * 18, 123 + l * 18));
-            }
-
-        }
         for (int i1 = 0; i1 < 9; i1++) {
             addSlotToContainer(new Slot(inventoryPlayer, i1, 8 + i1 * 18, 181));
         }
+
+        for (int yOffset = 0; yOffset < 3; yOffset++) {
+            for (int xOffset = 0; xOffset < 9; xOffset++) {
+                addSlotToContainer(new Slot(inventoryPlayer, xOffset + yOffset * 9 + 9, 8 + xOffset * 18, 159 - yOffset * 18));
+            }
+        }
+        //Player's hotbar
+
 
 
     }
@@ -53,6 +54,9 @@ public class ContainerAssemblyTable extends Container {
 //    public ItemStack transferStackInSlot(final EntityPlayer player, final int index) {
 //        ItemStack itemstack = null;
 //        Slot slot = (Slot) this.inventorySlots.get(index);
+//        if(slot instanceof SlotOutput){
+//            return null;
+//        }
 //        if ((slot != null) && slot.getHasStack()) {
 //            final ItemStack itemstack1 = slot.getStack();
 //            itemstack = itemstack1.copy();
@@ -79,17 +83,11 @@ public class ContainerAssemblyTable extends Container {
 //        return itemstack;
 //    }
 //
+
+
+
+
 //
-//
-
-
-
-
-
-
-
-
-
 
     protected boolean shiftItemStack(ItemStack stackToShift, int start, int end) {
         boolean changed = false;
@@ -154,13 +152,15 @@ public class ContainerAssemblyTable extends Container {
         if (slot != null && slot.getHasStack()) {
             ItemStack stackInSlot = slot.getStack();
             originalStack = stackInSlot.copy();
-            if (slotIndex >= numSlots - 9 * 4 && tryShiftItem(stackInSlot, numSlots)) {
+            boolean isPlayerInventorySlot = slotIndex >= numSlots - 9 * 4;
+            boolean isHotBar = slotIndex >= numSlots - 9;
+            if (isPlayerInventorySlot && tryShiftItem(stackInSlot, numSlots)) {
                 // NOOP
-            } else if (slotIndex >= numSlots - 9 * 4 && slotIndex < numSlots - 9) {
+            } else if (isPlayerInventorySlot && !isHotBar) {
                 if (!shiftItemStack(stackInSlot, numSlots - 9, numSlots)) {
                     return null;
                 }
-            } else if (slotIndex >= numSlots - 9 && slotIndex < numSlots) {
+            } else if (isHotBar) {
                 if (!shiftItemStack(stackInSlot, numSlots - 9 * 4, numSlots - 9)) {
                     return null;
                 }
