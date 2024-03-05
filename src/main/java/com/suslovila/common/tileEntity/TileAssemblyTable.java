@@ -1,15 +1,18 @@
 package com.suslovila.common.tileEntity;
 
+import com.suslovila.api.ILaserTarget;
 import com.suslovila.api.crafting.AssemblyTableRecipes;
 import com.suslovila.common.inventory.container.SimpleInventory;
 import com.suslovila.network.PacketHandler;
 import com.suslovila.network.packet.PacketUpdateEnergy;
 import com.suslovila.network.packet.PacketUpdatePatterns;
 import com.suslovila.utils.InventoryUtils;
+import com.suslovila.utils.SusVec3;
 import com.suslovila.utils.collection.CollectionUtils;
 import com.suslovila.utils.nbt.INBTStoreable;
 import com.suslovila.utils.nbt.NBTHelper;
 import cpw.mods.fml.common.network.NetworkRegistry;
+import ic2.api.energy.tile.IEnergySink;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -18,17 +21,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.*;
 
-public class TileAssemblyTable extends TileSynchronised implements ISidedInventory {
+public class TileAssemblyTable extends TileSynchronised implements ISidedInventory, IEnergySink, ILaserTarget {
     //todo: сделать поля-маркеры на разные виды синхронизации, дабы не вызывать несколько раз одно и то же
+    //todo: вызывать обновление нынешнего паттерна
     SimpleInventory inventory = new SimpleInventory(getSizeInventory(), getOutputSlotsAmount(), "inv", 64);
     private static final int inventorySize = 24;
     private static final int inputSlotsAmount = 12;
     public static final int patternAmount = 8;
     public double euBuffer = 0.0;
-    public static final int bufferCapacity = 1000;
+    public static final int euBufferCapacity = 1000;
     public static final String PATTERNS_NBT = "patterns";
     public static final String CURRENT_PATTERN_NBT = "currentPattern";
     public static final String ENERGY_NBT = "energyAmount";
@@ -48,16 +53,18 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         }
         updateAvailablePatterns(new ArrayList<>());
         observeAvailableCrafts();
-        TESTING();
+       //TESTING();
         updateCurrentPattern();
         if (worldObj.getWorldTime() % 25 == 0) {
             markForSync();
         }
+        forceSyncPatterns();
+
     }
 
     private void TESTING() {
         euBuffer += 15;
-        euBuffer = Math.min(euBuffer, bufferCapacity);
+        euBuffer = Math.min(euBuffer, euBufferCapacity);
         forceSyncEnergy();
     }
 
@@ -268,15 +275,16 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public String removePatternWithUpdate(int index) {
         String removed = removePatternNoUpdate(index);
         updateAvailablePatterns(Collections.singletonList(removed));
+
         return removed;
     }
     public String removePatternNoUpdate(AssemblyTablePattern patternToRemove) {
         patterns.remove(patternToRemove);
         if (patternToRemove.equals(currentPattern)) {
             currentPattern = null;
+            updateCurrentPattern();
         }
         markForSave();
-        forceSyncPatterns();
         return patternToRemove.recipeId;
     }
     public String removePatternNoUpdate(int index) {
@@ -285,8 +293,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (removedPattern.equals(currentPattern)) {
             currentPattern = null;
         }
-        markForSave();
-        forceSyncPatterns();
+        markForSaveAndSync();
         return removed;
     }
 
@@ -302,13 +309,12 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public void activatePattern(int index) {
         patterns.get(index).isActive = true;
         markForSave();
-        forceSyncPatterns();
     }
 
     public void addPattern(String recipeId) {
         this.patterns.add(new AssemblyTablePattern(recipeId, false));
-        markForSave();
         forceSyncPatterns();
+        markForSave();
     }
 
 
@@ -335,7 +341,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
                 if (canStillCraft(pattern.recipeId) && pattern.isActive) {
                     currentPattern = pattern;
                     markForSave();
-                    forceSyncPatterns();
                     return;
                 }
             }
@@ -360,7 +365,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             if (iteratePattern.isActive && canStillCraft(iteratePattern.recipeId)) {
                 currentPattern = iteratePattern;
                 markForSave();
-                forceSyncPatterns();
                 return true;
             }
         }
@@ -369,7 +373,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             if (!canStillCraft(currentPattern.recipeId)) {
                 currentPattern = null;
                 markForSave();
-                forceSyncPatterns();
                 return true;
             }
         }
@@ -377,7 +380,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     }
 
     public int getEnergyScaled(int pixels) {
-        return (int) (euBuffer / bufferCapacity * pixels);
+        return (int) (euBuffer / euBufferCapacity * pixels);
     }
 
     @Override
@@ -393,6 +396,52 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     @Override
     public boolean canExtractItem(int slotIndex, ItemStack stack, int side) {
         return slotIndex >= getSizeInventory() - getInputSlotAmount();
+    }
+
+    @Override
+    public double getDemandedEnergy() {
+        if(currentPattern == null) return 0;
+        AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(currentPattern.recipeId);
+        if(recipe == null) return 0;
+        return recipe.energyCost - this.euBuffer;
+    }
+
+    @Override
+    public int getSinkTier() {
+        return 3;
+    }
+
+    @Override
+    public double injectEnergy(ForgeDirection forgeDirection, double amount, double voltage) {
+        return amount;
+    }
+
+    @Override
+    public boolean acceptsEnergyFrom(TileEntity tileEntity, ForgeDirection forgeDirection) {
+        return false;
+    }
+
+    @Override
+    public boolean requiresLaserEnergy() {
+        return currentPattern != null;
+    }
+
+    @Override
+    public double receiveLaserEnergy(TileEntityLaser laser, double amount, double voltage) {
+        double toAdd = Math.min(amount, TileAssemblyTable.euBufferCapacity - this.euBuffer);
+        this.euBuffer += toAdd;
+        forceSyncEnergy();
+        return amount - toAdd;
+    }
+
+    @Override
+    public boolean isValidTarget() {
+        return false;
+    }
+
+    @Override
+    public SusVec3 getLaserStreamPos() {
+        return null;
     }
 
 

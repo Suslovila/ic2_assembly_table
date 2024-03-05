@@ -3,6 +3,8 @@ package com.suslovila.client.gui;
 import com.suslovila.ExampleMod;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
 import com.suslovila.common.inventory.container.ContainerAssemblyTable;
+import com.suslovila.network.PacketHandler;
+import com.suslovila.network.packet.PacketAssemblyTableRecipeSelected;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -63,6 +65,8 @@ public class GuiAssemblyTable extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        PacketHandler.INSTANCE.sendToServer(new PacketAssemblyTableRecipeSelected(tile.xCoord, tile.yCoord, tile.zCoord, button.id));
+
     }
 
     public RenderItem getItemRenderer() {

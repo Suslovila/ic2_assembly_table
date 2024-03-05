@@ -17,7 +17,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-@Mod(name = ExampleMod.NAME, modid = ExampleMod.MOD_ID, version = ExampleMod.VERSION)
+@Mod(name = ExampleMod.NAME, modid = ExampleMod.MOD_ID, version = ExampleMod.VERSION, dependencies = "required-after:IC2;")
 public class ExampleMod {
 	public static final String NAME = "nameThatWillBeShown";
 	public static final String MOD_ID = "examplemod";

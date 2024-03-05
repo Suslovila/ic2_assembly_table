@@ -1,6 +1,8 @@
 package com.suslovila.utils;
 
 
+import com.suslovila.utils.nbt.INBTStoreable;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public class SusVec3 {
+public class SusVec3 implements INBTStoreable {
     //JUST COPIED FROM 1.18 VERSION BECAUSE I FIND VECTORS ON IT MORE COMFORTABLE
     public double x;
     public double y;
@@ -249,4 +251,26 @@ public class SusVec3 {
         return new SusVec3(array[0], array[1], array[2]);
     }
 
+    @Override
+    public void writeToNBT(NBTTagCompound rootNbt) {
+        rootNbt.setDouble("x", x);
+        rootNbt.setDouble("y", y);
+        rootNbt.setDouble("z", z);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound rootNbt) {
+        x = rootNbt.getDouble("x");
+        y = rootNbt.getDouble("y");
+        z = rootNbt.getDouble("z");
+    }
+
+    public static SusVec3 fromNbt(NBTTagCompound rootNbt) {
+        if (!rootNbt.hasKey("x") || !rootNbt.hasKey("y") || !rootNbt.hasKey("z")) return null;
+        return new SusVec3(
+                rootNbt.getDouble("x"),
+                rootNbt.getDouble("y"),
+                rootNbt.getDouble("z")
+        );
+    }
 }

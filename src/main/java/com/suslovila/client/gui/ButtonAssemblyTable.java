@@ -108,6 +108,6 @@ class ButtonAssemblyTable extends GuiButton {
 
     @Override
     public void mouseReleased(int mouseX, int mouseY) {
-        PacketHandler.INSTANCE.sendToServer(new PacketAssemblyTableRecipeSelected(gui.tile.xCoord, gui.tile.yCoord, gui.tile.zCoord, this.id));
+        //PacketHandler.INSTANCE.sendToServer(new PacketAssemblyTableRecipeSelected(gui.tile.xCoord, gui.tile.yCoord, gui.tile.zCoord, this.id));
     }
 }

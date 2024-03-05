@@ -5,41 +5,50 @@ import net.minecraftforge.common.config.Configuration;
 import java.io.File;
 
 public class Config {
-    public static boolean pvpLiteEnabled = false;
-    public static int arenaWorldId;
+    private static String categoryName = "ic2AssemblyTable";
+    public static int laserSinkTier;
+    public static int golemLinkQuality = 16;
 
-    public static boolean consumeEldritchDiaryAfterUse;
-    public static String modPrefix = "somePrefix";
-
-
+    public static int laserBufferCapacity;
+    public static int laserEnergyTransferAmountPerTick;
     public static void registerServerConfig(File modCfg) {
         Configuration cfg = new Configuration(modCfg);
         try {
-
-            //EXAMPLES
-
-            pvpLiteEnabled = cfg.getBoolean(
-				"EnablePvPLite",
-	            "PvPLite",
-	            false,
-	            "Включить ограничения для PvPLite мира");
-
-            arenaWorldId = cfg.getInt(
-				"PvPLiteWorldID",
-	            "PvPLite",
-	            666,
-	            0,
-	            Integer.MAX_VALUE,
-	            "ID PvPLite Мира"
+            laserBufferCapacity = cfg.getInt(
+                    "laserBufferCapacity",
+                    categoryName,
+                    10_000,
+                    0,
+                    Integer.MAX_VALUE,
+                    "Laser EU buffer capacity"
             );
 
-            modPrefix = cfg.getString(
-				"ModPrefix",
-	            "core", modPrefix,
-	            "Префикс системных сообщений мода"
+            laserSinkTier = cfg.getInt(
+                    "laserSinkTier",
+                    categoryName,
+                    5,
+                    0,
+                    Integer.MAX_VALUE,
+                    "Laser EU buffer capacity"
+            );
+            laserEnergyTransferAmountPerTick = cfg.getInt(
+                    "laserEnergyTransferAmountPerTick",
+                    categoryName,
+                    50,
+                    1,
+                    Integer.MAX_VALUE,
+                    "Laser EU buffer capacity"
+            );
+            laserEnergyTransferAmountPerTick = cfg.getInt(
+                    "golemLinkQuality",
+                    categoryName,
+                    16,
+                    1,
+                    Integer.MAX_VALUE,
+                    ""
             );
         } catch (Exception var8) {
-	        System.out.println("what");
+            System.out.println("error writing config for mod: " + ExampleMod.NAME);
         } finally {
             cfg.save();
         }
