@@ -1,6 +1,7 @@
 package com.suslovila.common.block;
 
 import com.suslovila.ExampleMod;
+import com.suslovila.api.ILaserTargetBlock;
 import com.suslovila.client.GuiIds;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
 import net.minecraft.block.Block;
@@ -10,9 +11,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class BlockTest extends BlockContainer {
+public class BlockAssemblyTable extends BlockContainer implements ILaserTargetBlock {
     //todo: не забыть добаить дроп предметов при поломке!!!!!!!!!
-    protected BlockTest(Material material) {
+    protected BlockAssemblyTable(Material material) {
         super(material);
     }
 

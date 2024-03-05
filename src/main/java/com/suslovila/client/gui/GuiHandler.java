@@ -1,7 +1,7 @@
 package com.suslovila.client.gui;
 
 import com.suslovila.client.GuiIds;
-import com.suslovila.common.inventory.container.ContainerTest;
+import com.suslovila.common.inventory.container.ContainerAssemblyTable;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
 import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,7 +22,7 @@ public class GuiHandler implements IGuiHandler {
                 if (!(tile instanceof TileAssemblyTable)) {
                     return null;
                 }
-                return new ContainerTest(player.inventory, (TileAssemblyTable)tile);
+                return new ContainerAssemblyTable(player.inventory, (TileAssemblyTable)tile);
 
             }
         }

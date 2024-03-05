@@ -2,8 +2,12 @@ package com.suslovila.client;
 
 
 import com.suslovila.client.render.ClientEventHandler;
+import com.suslovila.client.render.tile.TileLaserRenderer;
 import com.suslovila.common.CommonProxy;
 import com.suslovila.common.block.ModBlocks;
+import com.suslovila.common.tileEntity.TileEntityLaser;
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -27,7 +31,7 @@ public class ClientProxy extends CommonProxy {
         ModBlocks.registerRender();
         setupItemRenderers();
 
-        //ClientRegistry.bindTileEntitySpecialRenderer(TileClass::class.java, TileRendererInstance)
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLaser.class, new TileLaserRenderer());
 
 
         // RenderingRegistry.registerBlockHandler(BlockRenderer())
@@ -48,9 +52,7 @@ public class ClientProxy extends CommonProxy {
         //MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(block), ItemRenderer())
     }
 
-
-    public Object getServerGuiElement(int guiId, EntityPlayer player, World world, int x, int y, int z) {
-        return null;
+    public World getClientWorld() {
+        return FMLClientHandler.instance().getClient().theWorld;
     }
-
 }

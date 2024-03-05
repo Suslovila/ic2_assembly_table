@@ -1,5 +1,6 @@
 package com.suslovila.api.crafting;
 
+import com.suslovila.ExampleMod;
 import net.minecraft.item.ItemStack;
 import scala.actors.threadpool.Arrays;
 
@@ -13,8 +14,11 @@ public class AssemblyTableRecipes {
     public static AssemblyTableRecipes instance() {
         return INSTANCE;
     }
-    public AssemblyTableRecipe addRecipe(String id, double cost, ItemStack res, ItemStack... inputs){
-        AssemblyTableRecipe recipe = new AssemblyTableRecipe(cost, res, inputs);
+    public AssemblyTableRecipe addRecipe(String id, double energyCost, ItemStack res, ItemStack... inputs) throws Exception {
+        AssemblyTableRecipe recipe = new AssemblyTableRecipe(energyCost, res, inputs);
+        if(recipes.containsKey(id)){
+            throw new Exception(ExampleMod.MOD_ID + ": recipe with id " + id + " is already registered!!!");
+        }
         recipes.put(id, recipe);
         return recipe;
     }
