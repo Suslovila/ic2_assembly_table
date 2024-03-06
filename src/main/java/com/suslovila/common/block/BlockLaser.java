@@ -23,4 +23,21 @@ public class BlockLaser extends BlockMultiID {
     public Class<? extends TileEntity> getTeClass(int i, MutableObject<Class<?>[]> mutableObject, MutableObject<Object[]> mutableObject1) {
         return TileEntityLaser.class;
     }
+    public boolean isOpaqueCube() {
+        return false;
+    }
+
+    public boolean renderAsNormalBlock() {
+        return false;
+    }
+
+    public int getRenderType() {
+        return -1;
+    }
+
+   // override fun isSideSolid(world: IBlockAccess?, x: Int, y: Int, z: Int, side: ForgeDirection?) = false
+
+    public int getRenderBlockPass() {
+        return 1;
+    }
 }

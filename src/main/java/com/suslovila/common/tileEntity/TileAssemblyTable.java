@@ -2,6 +2,7 @@ package com.suslovila.common.tileEntity;
 
 import com.suslovila.api.ILaserTarget;
 import com.suslovila.api.crafting.AssemblyTableRecipes;
+import com.suslovila.client.gui.GuiAssemblyTable;
 import com.suslovila.common.inventory.container.SimpleInventory;
 import com.suslovila.network.PacketHandler;
 import com.suslovila.network.packet.PacketUpdateEnergy;
@@ -40,6 +41,9 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public static final int maxAvailableDistanceToPlayer = 64;
     public AssemblyTablePattern currentPattern = null;
     public List<AssemblyTablePattern> patterns = new ArrayList<>();
+    private double energyClientDelta = 0;
+    private final double energyClientPixels = GuiAssemblyTable.energyClientPixels;
+
 
     public TileAssemblyTable() {
         super();
@@ -53,7 +57,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         }
         updateAvailablePatterns(new ArrayList<>());
         observeAvailableCrafts();
-       //TESTING();
+        //TESTING();
         updateCurrentPattern();
         if (worldObj.getWorldTime() % 25 == 0) {
             markForSync();
@@ -278,6 +282,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
 
         return removed;
     }
+
     public String removePatternNoUpdate(AssemblyTablePattern patternToRemove) {
         patterns.remove(patternToRemove);
         if (patternToRemove.equals(currentPattern)) {
@@ -287,6 +292,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         markForSave();
         return patternToRemove.recipeId;
     }
+
     public String removePatternNoUpdate(int index) {
         String removed = patterns.get(index).recipeId;
         AssemblyTablePattern removedPattern = patterns.remove(index);
@@ -379,8 +385,8 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         return false;
     }
 
-    public int getEnergyScaled(int pixels) {
-        return (int) (euBuffer / euBufferCapacity * pixels);
+    public int getEnergyScaled() {
+        return (int) (euBuffer / euBufferCapacity * energyClientPixels);
     }
 
     @Override
@@ -400,9 +406,9 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
 
     @Override
     public double getDemandedEnergy() {
-        if(currentPattern == null) return 0;
+        if (currentPattern == null) return 0;
         AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(currentPattern.recipeId);
-        if(recipe == null) return 0;
+        if (recipe == null) return 0;
         return recipe.energyCost - this.euBuffer;
     }
 
@@ -430,18 +436,23 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public double receiveLaserEnergy(TileEntityLaser laser, double amount, double voltage) {
         double toAdd = Math.min(amount, TileAssemblyTable.euBufferCapacity - this.euBuffer);
         this.euBuffer += toAdd;
-        forceSyncEnergy();
+        energyClientDelta += toAdd;
+        boolean isDifferenceMoreThanOnePixel = (energyClientDelta / euBufferCapacity) > (1 / energyClientPixels);
+        if (isDifferenceMoreThanOnePixel) {
+            forceSyncEnergy();
+            energyClientDelta = 0;
+        }
         return amount - toAdd;
     }
 
     @Override
     public boolean isValidTarget() {
-        return false;
+        return true;
     }
 
     @Override
     public SusVec3 getLaserStreamPos() {
-        return null;
+        return new SusVec3(xCoord, yCoord, zCoord);
     }
 
 

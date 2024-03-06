@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2011-2017, SpaceToad and the BuildCraft Team
  * http://www.mod-buildcraft.com
- *
+ * <p>
  * The BuildCraft API is distributed under the terms of the MIT License.
  * Please check the contents of the license, which should be located
  * as "LICENSE.API" in the BuildCraft source code distribution.
@@ -13,39 +13,29 @@ import com.suslovila.utils.SusVec3;
 
 /**
  * This interface should be defined by any Tile which wants
- * to receive energy from BuildCraft lasers.
- *
+ * to receive energy from lasers.
+ * <p>
  * The respective Block MUST implement ILaserTargetBlock!
  */
 public interface ILaserTarget {
 
-	/**
-	 * Returns true if the target currently needs power. For example, if the Advanced
-	 * Crafting Table has work to do.
-	 *
-	 * @return true if needs power
-	 */
-	boolean requiresLaserEnergy();
 
-	/**
-	 * Transfers energy from the laser to the target.
-	 *
-	 * @param amount
-	 */
-	double receiveLaserEnergy(TileEntityLaser laser, double amount, double voltage);
+    boolean requiresLaserEnergy();
 
-	/**
-	 * Return true if the Tile Entity object is no longer a valid target. For
-	 * example, if its been invalidated.
-	 *
-	 * @return true if no longer a valid target object
-	 */
-	boolean isValidTarget();
+    /**
+     * Transfers energy from the laser to the target.
+     *
+     * @param amount
+     */
+    double receiveLaserEnergy(TileEntityLaser laser, double amount, double voltage);
 
-	/**
-	 * Get the X coordinate of the laser stream.
-	 * @return
-	 */
 
-	SusVec3 getLaserStreamPos();
+    boolean isValidTarget();
+
+    /**
+     * Get the  coordinates of the laser destination
+     *
+     * @return
+     */
+    SusVec3 getLaserStreamPos();
 }
