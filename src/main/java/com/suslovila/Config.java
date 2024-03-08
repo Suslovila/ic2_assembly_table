@@ -34,20 +34,13 @@ public class Config {
             laserEnergyTransferAmountPerTick = cfg.getInt(
                     "laserEnergyTransferAmountPerTick",
                     categoryName,
-                    50,
+                    1,
                     1,
                     Integer.MAX_VALUE,
                     "Laser EU buffer capacity"
             );
-            laserEnergyTransferAmountPerTick = cfg.getInt(
-                    "golemLinkQuality",
-                    categoryName,
-                    16,
-                    1,
-                    Integer.MAX_VALUE,
-                    ""
-            );
-        } catch (Exception var8) {
+
+        } catch (Exception exception) {
             System.out.println("error writing config for mod: " + ExampleMod.NAME);
         } finally {
             cfg.save();

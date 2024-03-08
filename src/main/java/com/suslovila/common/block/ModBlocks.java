@@ -8,21 +8,19 @@ import ic2.core.init.InternalName;
 import net.minecraft.block.material.Material;
 
 public class ModBlocks {
-    public static int exampleRenderID = -1;
-
     public static BlockAssemblyTable table = new BlockAssemblyTable(Material.anvil);
-
+    public static BlockLaser laser = new BlockLaser(InternalName.active);
 
     public static void register() {
 
-        GameRegistry.registerBlock(table, "assemblyTable");
+        GameRegistry.registerBlock(table, "block_assemblyTable");
+        GameRegistry.registerBlock(laser, "block_laser");
 
-        GameRegistry.registerTileEntity(TileAssemblyTable.class, "assemble_table");
-        GameRegistry.registerTileEntity(TileEntityLaser.class, "laser");
-        new BlockLaser(InternalName.blockMachine);
+        GameRegistry.registerTileEntity(TileAssemblyTable.class, "tile_assemblytable");
+        GameRegistry.registerTileEntity(TileEntityLaser.class, "tile_laser");
     }
 
-    public static void registerRender(){
+    public static void registerRender() {
         //exampleRenderID = RenderingRegistry.getNextAvailableRenderId();
 
     }

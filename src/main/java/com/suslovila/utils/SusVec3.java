@@ -1,6 +1,7 @@
 package com.suslovila.utils;
 
 
+import com.suslovila.ExampleMod;
 import com.suslovila.utils.nbt.INBTStoreable;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -251,26 +252,32 @@ public class SusVec3 implements INBTStoreable {
         return new SusVec3(array[0], array[1], array[2]);
     }
 
+
+
+    private static final String X_NBT = ExampleMod.MOD_ID + "x";
+    private static final String Y_NBT = ExampleMod.MOD_ID + "y";
+    private static final String Z_NBT = ExampleMod.MOD_ID + "z";
+
     @Override
     public void writeToNBT(NBTTagCompound rootNbt) {
-        rootNbt.setDouble("x", x);
-        rootNbt.setDouble("y", y);
-        rootNbt.setDouble("z", z);
+        rootNbt.setDouble(X_NBT, x);
+        rootNbt.setDouble(Y_NBT, y);
+        rootNbt.setDouble(Z_NBT, z);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound rootNbt) {
-        x = rootNbt.getDouble("x");
-        y = rootNbt.getDouble("y");
-        z = rootNbt.getDouble("z");
+        x = rootNbt.getDouble(X_NBT);
+        y = rootNbt.getDouble(Y_NBT);
+        z = rootNbt.getDouble(Z_NBT);
     }
 
     public static SusVec3 fromNbt(NBTTagCompound rootNbt) {
-        if (!rootNbt.hasKey("x") || !rootNbt.hasKey("y") || !rootNbt.hasKey("z")) return null;
+        if (!rootNbt.hasKey(X_NBT) || !rootNbt.hasKey(Y_NBT) || !rootNbt.hasKey(Z_NBT)) return null;
         return new SusVec3(
-                rootNbt.getDouble("x"),
-                rootNbt.getDouble("y"),
-                rootNbt.getDouble("z")
+                rootNbt.getDouble(X_NBT),
+                rootNbt.getDouble(Y_NBT),
+                rootNbt.getDouble(Z_NBT)
         );
     }
 }

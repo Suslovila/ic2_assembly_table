@@ -44,7 +44,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void registerRenderers() {
-        MinecraftForge.EVENT_BUS.register(ClientEventHandler.getInstance());
+        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
         //MinecraftForgeClient.registerItemRenderer(ModItems.item, CustomItemRenderer)
     }
 

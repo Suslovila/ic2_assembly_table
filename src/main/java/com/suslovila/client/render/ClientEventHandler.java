@@ -8,14 +8,6 @@ import org.lwjgl.opengl.GL11.*;
 
 @SideOnly(Side.CLIENT)
 public class ClientEventHandler {
-    private static ClientEventHandler instance = new ClientEventHandler();
-
-    private ClientEventHandler() {
-    }
-
-    public static ClientEventHandler getInstance() {
-        return instance;
-    }
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent

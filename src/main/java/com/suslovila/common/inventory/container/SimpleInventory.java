@@ -28,8 +28,6 @@ public class SimpleInventory implements IInventory, INBTStoreable {
     private static final String ITEMS_NBT = "Items";
     private static final String SLOT_NBT = "Slot";
     private static final String SLOT_INDEX_NBT = "index";
-    private static final String OUTPUT_SLOT_INDEX_NBT = "outputIndex";
-
 
     private final ItemStack[] contents;
     private final int firstOutPutSlotIndex;

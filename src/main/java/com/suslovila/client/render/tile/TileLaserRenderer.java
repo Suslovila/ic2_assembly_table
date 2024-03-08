@@ -1,9 +1,7 @@
 package com.suslovila.client.render.tile;
 
 import com.suslovila.ExampleMod;
-import com.suslovila.api.ILaserTarget;
 import com.suslovila.common.tileEntity.TileEntityLaser;
-import com.suslovila.utils.GraphicHelper;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -16,39 +14,43 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class TileLaserRenderer extends TileEntitySpecialRenderer {
     ResourceLocation texture = new ResourceLocation(ExampleMod.MOD_ID, "textures/misc/wispy.png");
+
     @Override
     public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks) {
         if (!(tile instanceof TileEntityLaser)) return;
         TileEntityLaser tileLaser = (TileEntityLaser) tile;
         //renderLaser(tileLaser, x, y, z, partialTicks);
         glPushMatrix();
-        renderBeam(tileLaser, x, y, z, partialTicks);
+        renderLaser(tileLaser, x, y, z, partialTicks);
         //glTranslated(x + 0.5, y + 0.5, z + 0.5);
         glPopMatrix();
     }
 
+//    private void renderLaser(TileEntityLaser tileLaser, double x, double y, double z, float partialTicks) {
+//        //if (tileLaser.laserDestinationPos == null) return;
+//        float time = GraphicHelper.getTimeForRender(partialTicks);
+//        GraphicHelper.drawFloatyLine(
+//                tileLaser.xCoord,
+//                tileLaser.yCoord,
+//                tileLaser.zCoord,
+//                tileLaser.laserDestinationPos.x,
+//                tileLaser.laserDestinationPos.y,
+//                tileLaser.laserDestinationPos.z,
+//                time,
+//                45345,
+//                "textures/misc/wispy.png",
+//                0.1f,
+//                Math.min(time, 10.0f) / 10.0f,
+//                0.15f
+//        );
+//    }
+
+
+    //method for future plans with beam render
     private void renderLaser(TileEntityLaser tileLaser, double x, double y, double z, float partialTicks) {
-        //if (tileLaser.laserDestinationPos == null) return;
-        float time = GraphicHelper.getTimeForRender(partialTicks);
-        GraphicHelper.drawFloatyLine(
-                tileLaser.xCoord,
-                tileLaser.yCoord,
-                tileLaser.zCoord,
-                tileLaser.laserDestinationPos.x,
-                tileLaser.laserDestinationPos.y,
-                tileLaser.laserDestinationPos.z,
-                time,
-                45345,
-                "textures/misc/wispy.png",
-                0.1f,
-                Math.min(time, 10.0f) / 10.0f,
-                0.15f
-        );
-    }
-    private void renderBeam(TileEntityLaser tileLaser, double x, double y, double z, float partialTicks){
         float f1 = 0.001f;
         Tessellator tessellator = Tessellator.instance;
-       // glRotatef(90, 1,0,0);
+        // glRotatef(90, 1,0,0);
         this.bindTexture(texture);
         GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, 10497.0F);
         GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, 10497.0F);
@@ -57,13 +59,13 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glDepthMask(true);
         OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, 1, 1, 0);
-        float timer = (float)tileLaser.getWorld().getTotalWorldTime() + partialTicks;
+        float timer = (float) tileLaser.getWorld().getTotalWorldTime() + partialTicks;
         float f3 = -timer * 0.2F - (float) MathHelper.floor_float(-timer * 0.1F);
         byte b0 = 1;
-        double d3 = (double)timer * 0.025D * (1.0D - (double)(b0 & 1) * 2.5D);
+        double d3 = (double) timer * 0.025D * (1.0D - (double) (b0 & 1) * 2.5D);
         tessellator.startDrawingQuads();
         tessellator.setColorRGBA(255, 255, 255, 32);
-        double d5 = (double)b0 * 0.2D;
+        double d5 = (double) b0 * 0.2D;
         double d7 = 0.5D + Math.cos(d3 + 2.356194490192345D) * d5;
         double d9 = 0.5D + Math.sin(d3 + 2.356194490192345D) * d5;
         double d11 = 0.5D + Math.cos(d3 + (Math.PI / 4D)) * d5;
@@ -72,11 +74,11 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         double d17 = 0.5D + Math.sin(d3 + 3.9269908169872414D) * d5;
         double d19 = 0.5D + Math.cos(d3 + 5.497787143782138D) * d5;
         double d21 = 0.5D + Math.sin(d3 + 5.497787143782138D) * d5;
-        double d23 = (double)(256.0F * f1);
+        double d23 = (double) (256.0F * f1);
         double d25 = 0.0D;
         double d27 = 1.0D;
-        double d28 = (double)(-1.0F + f3);
-        double d29 = (double)(256.0F * f1) * (0.5D / d5) + d28;
+        double d28 = (double) (-1.0F + f3);
+        double d29 = (double) (256.0F * f1) * (0.5D / d5) + d28;
         tessellator.addVertexWithUV(x + d7, y + d23, z + d9, d27, d29);
         tessellator.addVertexWithUV(x + d7, y, z + d9, d27, d28);
         tessellator.addVertexWithUV(x + d11, y, z + d13, d25, d28);
@@ -107,11 +109,11 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         double d12 = 0.8D;
         double d14 = 0.8D;
         double d16 = 0.8D;
-        double d18 = (double)(256.0F * f1);
+        double d18 = (double) (256.0F * f1);
         double d20 = 0.0D;
         double d22 = 1.0D;
-        double d24 = (double)(-1.0F + f3);
-        double d26 = (double)(256.0F * f1) + d24;
+        double d24 = (double) (-1.0F + f3);
+        double d26 = (double) (256.0F * f1) + d24;
         tessellator.addVertexWithUV(x + d30, y + d18, z + d4, d22, d26);
         tessellator.addVertexWithUV(x + d30, y, z + d4, d22, d24);
         tessellator.addVertexWithUV(x + d6, y, z + d8, d20, d24);

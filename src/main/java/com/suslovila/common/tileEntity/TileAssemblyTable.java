@@ -26,7 +26,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.*;
 
-public class TileAssemblyTable extends TileSynchronised implements ISidedInventory, IEnergySink, ILaserTarget {
+public class TileAssemblyTable extends TileSynchronised implements ISidedInventory, ILaserTarget {
     //todo: сделать поля-маркеры на разные виды синхронизации, дабы не вызывать несколько раз одно и то же
     //todo: вызывать обновление нынешнего паттерна
     SimpleInventory inventory = new SimpleInventory(getSizeInventory(), getOutputSlotsAmount(), "inv", 64);
@@ -35,15 +35,14 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public static final int patternAmount = 8;
     public double euBuffer = 0.0;
     public static final int euBufferCapacity = 1000;
-    public static final String PATTERNS_NBT = "patterns";
-    public static final String CURRENT_PATTERN_NBT = "currentPattern";
-    public static final String ENERGY_NBT = "energyAmount";
     public static final int maxAvailableDistanceToPlayer = 64;
     public AssemblyTablePattern currentPattern = null;
     public List<AssemblyTablePattern> patterns = new ArrayList<>();
     private double energyClientDelta = 0;
     private final double energyClientPixels = GuiAssemblyTable.energyClientPixels;
 
+    public ForgeDirection facing = ForgeDirection.DOWN;
+    public boolean active = false;
 
     public TileAssemblyTable() {
         super();
@@ -55,42 +54,43 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (worldObj.isRemote) {
             return;
         }
+
+        TESTING();
+
         updateAvailablePatterns(new ArrayList<>());
         observeAvailableCrafts();
-        //TESTING();
         updateCurrentPattern();
-        if (worldObj.getWorldTime() % 25 == 0) {
-            markForSync();
-        }
-        forceSyncPatterns();
-
     }
 
     private void TESTING() {
-        euBuffer += 15;
-        euBuffer = Math.min(euBuffer, euBufferCapacity);
-        forceSyncEnergy();
+//        euBuffer+=20;
+//        forceSyncEnergy();
     }
 
 
     //excludedRecipes will not be added while this check (used to walk throw available recipes)
     public void updateAvailablePatterns(Collection<String> excludedRecipes) {
         if (worldObj.isRemote) return;
+        boolean changed = false;
         List<AssemblyTablePattern> copyPatterns = new ArrayList<>(patterns);
         for (int i = 0; i < copyPatterns.size(); i++) {
             AssemblyTablePattern pattern = copyPatterns.get(i);
             boolean canStillCraft = this.canStillCraft(pattern.recipeId);
             if (!pattern.isActive && !canStillCraft) {
                 removePatternNoUpdate(pattern);
+                changed = true;
             }
         }
-
-        AssemblyTableRecipes.instance().recipes.forEach((recipeId, recipe) -> {
+        for (String recipeId : AssemblyTableRecipes.instance().recipes.keySet()) {
             boolean tileAlreadyContainsRecipe = this.patterns.stream().anyMatch(pattern -> pattern.recipeId.equals(recipeId));
             if (this.canAddMorePatterns() && !tileAlreadyContainsRecipe && !excludedRecipes.contains(recipeId) && canStillCraft(recipeId)) {
                 addPattern(recipeId);
+                changed = true;
             }
-        });
+        }
+        if (changed) {
+            markForSaveAndForcePatterns();
+        }
     }
 
 
@@ -161,43 +161,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         return recipe.inputs.stream().allMatch(stack -> this.inventory.hasEnough(stack));
     }
 
-    public void writeCustomNBT(NBTTagCompound rootNbt) {
-        inventory.writeToNBT(rootNbt);
-        NBTTagList patternsNbtList = new NBTTagList();
-        for (AssemblyTablePattern pattern : patterns) {
-            NBTTagCompound patternNbt = new NBTTagCompound();
-            pattern.writeToNBT(patternNbt);
-            patternsNbtList.appendTag(patternNbt);
-        }
-        rootNbt.setTag(PATTERNS_NBT, patternsNbtList);
-        if (currentPattern != null) {
-            NBTTagCompound currentPatternNbt = new NBTTagCompound();
-            currentPattern.writeToNBT(currentPatternNbt);
-            rootNbt.setTag(CURRENT_PATTERN_NBT, currentPatternNbt);
-        }
-        rootNbt.setDouble(ENERGY_NBT, euBuffer);
-    }
-
-    public void readCustomNBT(NBTTagCompound rootNbt) {
-        inventory.readFromNBT(rootNbt);
-        if (rootNbt.hasKey(PATTERNS_NBT)) {
-            ArrayList<AssemblyTablePattern> readPatterns = new ArrayList<>();
-            NBTTagList patternsNbt = rootNbt.getTagList(PATTERNS_NBT, NBTHelper.TAG_COMPOUND);
-            for (int i = 0; i < patternsNbt.tagCount(); i++) {
-                NBTTagCompound patternNbt = patternsNbt.getCompoundTagAt(i);
-                AssemblyTablePattern pattern = new AssemblyTablePattern(patternNbt);
-                readPatterns.add(pattern);
-            }
-            this.patterns = readPatterns;
-            if (rootNbt.hasKey(CURRENT_PATTERN_NBT)) {
-                currentPattern = new AssemblyTablePattern((NBTTagCompound) rootNbt.getTag(CURRENT_PATTERN_NBT));
-            } else {
-                currentPattern = null;
-            }
-            euBuffer = rootNbt.getDouble(ENERGY_NBT);
-        }
-    }
-
 
     @Override
     public int getSizeInventory() {
@@ -207,10 +170,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     @Override
     public void setInventorySlotContents(int slot, ItemStack stack) {
         inventory.setInventorySlotContents(slot, stack);
-//
-//        if (currentRecipe == null) {
-//            setNextCurrentRecipe();
-//        }
     }
 
     @Override
@@ -279,6 +238,8 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public String removePatternWithUpdate(int index) {
         String removed = removePatternNoUpdate(index);
         updateAvailablePatterns(Collections.singletonList(removed));
+        updateAvailablePatterns(new ArrayList<>());
+        //we do not sync patterns here in order to prevent pattern "blinking"
 
         return removed;
     }
@@ -287,9 +248,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         patterns.remove(patternToRemove);
         if (patternToRemove.equals(currentPattern)) {
             currentPattern = null;
-            updateCurrentPattern();
         }
-        markForSave();
         return patternToRemove.recipeId;
     }
 
@@ -299,7 +258,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (removedPattern.equals(currentPattern)) {
             currentPattern = null;
         }
-        markForSaveAndSync();
+        //should not fire sync
         return removed;
     }
 
@@ -314,39 +273,20 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
 
     public void activatePattern(int index) {
         patterns.get(index).isActive = true;
-        markForSave();
+        markForSaveAndForcePatterns();
     }
 
     public void addPattern(String recipeId) {
         this.patterns.add(new AssemblyTablePattern(recipeId, false));
-        forceSyncPatterns();
-        markForSave();
     }
 
-
-    //used to instantly update patterns on client to avoid annoying 1 tick delay (caused by tileEntity sync delay)
-    public void forceSyncPatterns() {
-        if (!worldObj.isRemote) {
-            PacketHandler.INSTANCE.sendToAllAround(
-                    new PacketUpdatePatterns(xCoord, yCoord, zCoord, patterns, currentPattern),
-                    new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
-        }
-    }
-
-    public void forceSyncEnergy() {
-        if (!worldObj.isRemote) {
-            PacketHandler.INSTANCE.sendToAllAround(
-                    new PacketUpdateEnergy(xCoord, yCoord, zCoord, euBuffer),
-                    new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
-        }
-    }
 
     public void updateCurrentPattern() {
         if (currentPattern == null) {
             for (AssemblyTablePattern pattern : patterns) {
                 if (canStillCraft(pattern.recipeId) && pattern.isActive) {
                     currentPattern = pattern;
-                    markForSave();
+                    markForSaveAndForcePatterns();
                     return;
                 }
             }
@@ -370,7 +310,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             AssemblyTablePattern iteratePattern = patterns.get(patternIndex);
             if (iteratePattern.isActive && canStillCraft(iteratePattern.recipeId)) {
                 currentPattern = iteratePattern;
-                markForSave();
+                markForSaveAndForcePatterns();
                 return true;
             }
         }
@@ -378,11 +318,33 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (currentPattern != null) {
             if (!canStillCraft(currentPattern.recipeId)) {
                 currentPattern = null;
-                markForSave();
+                markForSaveAndForcePatterns();
                 return true;
             }
         }
         return false;
+    }
+
+    //used to instantly update patterns on client to avoid annoying 1 tick delay (caused by tileEntity sync delay)
+    public void forceSyncPatterns() {
+        if (!worldObj.isRemote) {
+            PacketHandler.INSTANCE.sendToAllAround(
+                    new PacketUpdatePatterns(xCoord, yCoord, zCoord, patterns, currentPattern),
+                    new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
+        }
+    }
+
+    public void forceSyncEnergy() {
+        if (!worldObj.isRemote) {
+            PacketHandler.INSTANCE.sendToAllAround(
+                    new PacketUpdateEnergy(xCoord, yCoord, zCoord, euBuffer),
+                    new NetworkRegistry.TargetPoint(worldObj.provider.dimensionId, xCoord, yCoord, zCoord, maxAvailableDistanceToPlayer));
+        }
+    }
+
+    public void markForSaveAndForcePatterns() {
+        markForSave();
+        forceSyncPatterns();
     }
 
     public int getEnergyScaled() {
@@ -404,28 +366,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         return slotIndex >= getSizeInventory() - getInputSlotAmount();
     }
 
-    @Override
-    public double getDemandedEnergy() {
-        if (currentPattern == null) return 0;
-        AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(currentPattern.recipeId);
-        if (recipe == null) return 0;
-        return recipe.energyCost - this.euBuffer;
-    }
-
-    @Override
-    public int getSinkTier() {
-        return 3;
-    }
-
-    @Override
-    public double injectEnergy(ForgeDirection forgeDirection, double amount, double voltage) {
-        return amount;
-    }
-
-    @Override
-    public boolean acceptsEnergyFrom(TileEntity tileEntity, ForgeDirection forgeDirection) {
-        return false;
-    }
 
     @Override
     public boolean requiresLaserEnergy() {
@@ -442,6 +382,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             forceSyncEnergy();
             energyClientDelta = 0;
         }
+        markForSave();
         return amount - toAdd;
     }
 
@@ -453,6 +394,48 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     @Override
     public SusVec3 getLaserStreamPos() {
         return new SusVec3(xCoord, yCoord, zCoord);
+    }
+
+
+    public static final String PATTERNS_NBT = "patterns";
+    public static final String CURRENT_PATTERN_NBT = "currentPattern";
+    public static final String ENERGY_NBT = "energyAmount";
+
+    public void writeCustomNBT(NBTTagCompound rootNbt) {
+        inventory.writeToNBT(rootNbt);
+        NBTTagList patternsNbtList = new NBTTagList();
+        for (AssemblyTablePattern pattern : patterns) {
+            NBTTagCompound patternNbt = new NBTTagCompound();
+            pattern.writeToNBT(patternNbt);
+            patternsNbtList.appendTag(patternNbt);
+        }
+        rootNbt.setTag(PATTERNS_NBT, patternsNbtList);
+        if (currentPattern != null) {
+            NBTTagCompound currentPatternNbt = new NBTTagCompound();
+            currentPattern.writeToNBT(currentPatternNbt);
+            rootNbt.setTag(CURRENT_PATTERN_NBT, currentPatternNbt);
+        }
+        rootNbt.setDouble(ENERGY_NBT, euBuffer);
+    }
+
+    public void readCustomNBT(NBTTagCompound rootNbt) {
+        inventory.readFromNBT(rootNbt);
+        if (rootNbt.hasKey(PATTERNS_NBT)) {
+            ArrayList<AssemblyTablePattern> readPatterns = new ArrayList<>();
+            NBTTagList patternsNbt = rootNbt.getTagList(PATTERNS_NBT, NBTHelper.TAG_COMPOUND);
+            for (int i = 0; i < patternsNbt.tagCount(); i++) {
+                NBTTagCompound patternNbt = patternsNbt.getCompoundTagAt(i);
+                AssemblyTablePattern pattern = new AssemblyTablePattern(patternNbt);
+                readPatterns.add(pattern);
+            }
+            this.patterns = readPatterns;
+            if (rootNbt.hasKey(CURRENT_PATTERN_NBT)) {
+                currentPattern = new AssemblyTablePattern((NBTTagCompound) rootNbt.getTag(CURRENT_PATTERN_NBT));
+            } else {
+                currentPattern = null;
+            }
+            euBuffer = rootNbt.getDouble(ENERGY_NBT);
+        }
     }
 
 
@@ -499,6 +482,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
             return Objects.equals(this.recipeId, ((AssemblyTablePattern) pattern).recipeId) &&
                     this.isActive == ((AssemblyTablePattern) pattern).isActive;
         }
+
     }
 
     public boolean hasEnough(ItemStack requiredItemStack) {

@@ -64,7 +64,7 @@ class ButtonAssemblyTable extends GuiButton {
                         float scale = 0.9f;
                         glScalef(scale, scale, scale);
                         glTranslatef(mouseX / scale, mouseY / scale, 0);
-                        drawStack(mc, inputStack, (int) (3 / scale + stackIndex * 15), (int) (1 / scale), 150f);
+                        drawStack(mc, inputStack, (int) (1 / scale + stackIndex * 15), (int) (1 / scale), 150f);
                         glPopMatrix();
 
                     }
@@ -80,9 +80,7 @@ class ButtonAssemblyTable extends GuiButton {
         glPushMatrix();
         glPushAttrib(GL_TRANSFORM_BIT);
         glEnable(GL12.GL_RESCALE_NORMAL);
-        int i1 = 240;
-        int k1 = 240;
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, i1 / 1.0F, k1 / 1.0F);
+
         if (item != null) {
             glEnable(GL_LIGHTING);
             glEnable(GL_DEPTH_TEST);

@@ -14,14 +14,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.mutable.MutableObject;
 
-public class BlockLaser extends BlockMultiID {
+public class BlockLaser extends BlockContainer {
     protected BlockLaser(InternalName name) {
-        super(name, Material.iron);
+        super(Material.iron);
     }
 
-    @Override
-    public Class<? extends TileEntity> getTeClass(int i, MutableObject<Class<?>[]> mutableObject, MutableObject<Object[]> mutableObject1) {
-        return TileEntityLaser.class;
+    public TileEntity createNewTileEntity(World world, int metadata){
+        return new TileEntityLaser();
     }
     public boolean isOpaqueCube() {
         return false;
@@ -34,8 +33,6 @@ public class BlockLaser extends BlockMultiID {
     public int getRenderType() {
         return -1;
     }
-
-   // override fun isSideSolid(world: IBlockAccess?, x: Int, y: Int, z: Int, side: ForgeDirection?) = false
 
     public int getRenderBlockPass() {
         return 1;

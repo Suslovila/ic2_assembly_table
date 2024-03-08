@@ -47,26 +47,26 @@ public class InventoryUtils {
         }
     }
 
-    public static ItemStack insertStack(IInventory inventory, ItemStack stack1, int side, boolean doit, boolean force, int indexFrom) {
+    public static ItemStack insertStack(IInventory inventory, ItemStack stackToInsert, int side, boolean doit, boolean force, int indexFrom) {
         if (inventory instanceof ISidedInventory && side > -1) {
             ISidedInventory isidedinventory = (ISidedInventory) inventory;
-            int[] aint = isidedinventory.getSlotsForFace(side);
-            if (aint != null) {
-                for (int j = indexFrom; j < aint.length && stack1 != null && stack1.stackSize > 0; ++j) {
-                    if (inventory.getStackInSlot(aint[j]) != null && inventory.getStackInSlot(aint[j]).isItemEqual(stack1)) {
-                        stack1 = attemptInsertion(inventory, stack1, aint[j], side, doit, force);
+            int[] availableSlotsToPut = isidedinventory.getSlotsForFace(side);
+            if (availableSlotsToPut != null) {
+                for (int j = indexFrom; j < availableSlotsToPut.length && stackToInsert != null && stackToInsert.stackSize > 0; ++j) {
+                    if (inventory.getStackInSlot(availableSlotsToPut[j]) != null && inventory.getStackInSlot(availableSlotsToPut[j]).isItemEqual(stackToInsert)) {
+                        stackToInsert = attemptInsertion(inventory, stackToInsert, availableSlotsToPut[j], side, doit, force);
                     }
 
-                    if (stack1 == null || stack1.stackSize == 0) {
+                    if (stackToInsert == null || stackToInsert.stackSize == 0) {
                         break;
                     }
                 }
             }
 
-            if (aint != null && stack1 != null && stack1.stackSize > 0) {
-                for (int j = indexFrom; j < aint.length && stack1 != null && stack1.stackSize > 0; ++j) {
-                    stack1 = attemptInsertion(inventory, stack1, aint[j], side, doit, force);
-                    if (stack1 == null || stack1.stackSize == 0) {
+            if (availableSlotsToPut != null && stackToInsert != null && stackToInsert.stackSize > 0) {
+                for (int j = indexFrom; j < availableSlotsToPut.length && stackToInsert != null && stackToInsert.stackSize > 0; ++j) {
+                    stackToInsert = attemptInsertion(inventory, stackToInsert, availableSlotsToPut[j], side, doit, force);
+                    if (stackToInsert == null || stackToInsert.stackSize == 0) {
                         break;
                     }
                 }
@@ -74,52 +74,52 @@ public class InventoryUtils {
         } else {
             int k = inventory.getSizeInventory();
 
-            for (int l = 0; l < k && stack1 != null && stack1.stackSize > 0; ++l) {
-                if (inventory.getStackInSlot(l) != null && inventory.getStackInSlot(l).isItemEqual(stack1)) {
-                    stack1 = attemptInsertion(inventory, stack1, l, side, doit, force);
+            for (int l = 0; l < k && stackToInsert != null && stackToInsert.stackSize > 0; ++l) {
+                if (inventory.getStackInSlot(l) != null && inventory.getStackInSlot(l).isItemEqual(stackToInsert)) {
+                    stackToInsert = attemptInsertion(inventory, stackToInsert, l, side, doit, force);
                 }
 
-                if (stack1 == null || stack1.stackSize == 0) {
+                if (stackToInsert == null || stackToInsert.stackSize == 0) {
                     break;
                 }
             }
 
-            if (stack1 != null && stack1.stackSize > 0) {
-                TileEntityChest dc = null;
+            if (stackToInsert != null && stackToInsert.stackSize > 0) {
+                TileEntityChest tileChest = null;
                 if (inventory instanceof TileEntity) {
-                    dc = getDoubleChest((TileEntity) inventory);
-                    if (dc != null) {
-                        int k2 = dc.getSizeInventory();
+                    tileChest = getDoubleChest((TileEntity) inventory);
+                    if (tileChest != null) {
+                        int k2 = tileChest.getSizeInventory();
 
-                        for (int l = 0; l < k2 && stack1 != null && stack1.stackSize > 0; ++l) {
-                            if (dc.getStackInSlot(l) != null && dc.getStackInSlot(l).isItemEqual(stack1)) {
-                                stack1 = attemptInsertion(dc, stack1, l, side, doit, force);
+                        for (int l = 0; l < k2 && stackToInsert != null && stackToInsert.stackSize > 0; ++l) {
+                            if (tileChest.getStackInSlot(l) != null && tileChest.getStackInSlot(l).isItemEqual(stackToInsert)) {
+                                stackToInsert = attemptInsertion(tileChest, stackToInsert, l, side, doit, force);
                             }
 
-                            if (stack1 == null || stack1.stackSize == 0) {
+                            if (stackToInsert == null || stackToInsert.stackSize == 0) {
                                 break;
                             }
                         }
                     }
                 }
 
-                if (stack1 != null && stack1.stackSize > 0) {
-                    for (int l = 0; l < k && stack1 != null && stack1.stackSize > 0; ++l) {
-                        stack1 = attemptInsertion(inventory, stack1, l, side, doit, force);
-                        if (stack1 == null || stack1.stackSize == 0) {
+                if (stackToInsert != null && stackToInsert.stackSize > 0) {
+                    for (int l = 0; l < k && stackToInsert != null && stackToInsert.stackSize > 0; ++l) {
+                        stackToInsert = attemptInsertion(inventory, stackToInsert, l, side, doit, force);
+                        if (stackToInsert == null || stackToInsert.stackSize == 0) {
                             break;
                         }
                     }
 
-                    if (stack1 != null && stack1.stackSize > 0 && dc != null) {
-                        int k2 = dc.getSizeInventory();
+                    if (stackToInsert != null && stackToInsert.stackSize > 0 && tileChest != null) {
+                        int k2 = tileChest.getSizeInventory();
 
-                        for (int l = 0; l < k2 && stack1 != null && stack1.stackSize > 0; ++l) {
-                            if (dc.getStackInSlot(l) != null && dc.getStackInSlot(l).isItemEqual(stack1)) {
-                                stack1 = attemptInsertion(dc, stack1, l, side, doit, force);
+                        for (int l = 0; l < k2 && stackToInsert != null && stackToInsert.stackSize > 0; ++l) {
+                            if (tileChest.getStackInSlot(l) != null && tileChest.getStackInSlot(l).isItemEqual(stackToInsert)) {
+                                stackToInsert = attemptInsertion(tileChest, stackToInsert, l, side, doit, force);
                             }
 
-                            if (stack1 == null || stack1.stackSize == 0) {
+                            if (stackToInsert == null || stackToInsert.stackSize == 0) {
                                 break;
                             }
                         }
@@ -128,11 +128,11 @@ public class InventoryUtils {
             }
         }
 
-        if (stack1 != null && stack1.stackSize == 0) {
-            stack1 = null;
+        if (stackToInsert != null && stackToInsert.stackSize == 0) {
+            stackToInsert = null;
         }
 
-        return stack1;
+        return stackToInsert;
     }
 
     private static ItemStack attemptInsertion(IInventory inventory, ItemStack stack, int slot, int side, boolean doit, boolean force) {
@@ -178,131 +178,12 @@ public class InventoryUtils {
         return stack;
     }
 
-    public static ItemStack getFirstItemInInventory(IInventory inventory, int size, int side, boolean doit) {
-        ItemStack stack1 = null;
-        if (inventory instanceof ISidedInventory && side > -1) {
-            ISidedInventory isidedinventory = (ISidedInventory) inventory;
-            int[] aint = isidedinventory.getSlotsForFace(side);
-
-            for (int j = 0; j < aint.length; ++j) {
-                if (stack1 == null && inventory.getStackInSlot(aint[j]) != null) {
-                    stack1 = inventory.getStackInSlot(aint[j]).copy();
-                    stack1.stackSize = size;
-                }
-
-                if (stack1 != null) {
-                    stack1 = attemptExtraction(inventory, stack1, aint[j], side, false, false, false, doit);
-                }
-
-                if (stack1 != null) {
-                    break;
-                }
-            }
-        } else {
-            int k = inventory.getSizeInventory();
-
-            for (int l = 0; l < k; ++l) {
-                if (stack1 == null && inventory.getStackInSlot(l) != null) {
-                    stack1 = inventory.getStackInSlot(l).copy();
-                    stack1.stackSize = size;
-                }
-
-                if (stack1 != null) {
-                    stack1 = attemptExtraction(inventory, stack1, l, side, false, false, false, doit);
-                }
-
-                if (stack1 != null) {
-                    break;
-                }
-            }
-        }
-
-        if (stack1 != null && stack1.stackSize != 0) {
-            return stack1.copy();
-        } else {
-            if (doit) {
-                inventory.markDirty();
-            }
-
-            return null;
-        }
-    }
-
-
-    public static ItemStack extractStack(IInventory inventory, ItemStack stack1, int side, boolean useOre, boolean ignoreDamage, boolean ignoreNBT, boolean doit) {
-        ItemStack outStack = null;
-        if (inventory instanceof ISidedInventory && side > -1) {
-            ISidedInventory isidedinventory = (ISidedInventory) inventory;
-            int[] aint = isidedinventory.getSlotsForFace(side);
-
-            for (int j = 0; j < aint.length && stack1 != null && stack1.stackSize > 0 && outStack == null; ++j) {
-                outStack = attemptExtraction(inventory, stack1, aint[j], side, useOre, ignoreDamage, ignoreNBT, doit);
-            }
-        } else {
-            int k = inventory.getSizeInventory();
-
-            for (int l = 0; l < k && stack1 != null && stack1.stackSize > 0 && outStack == null; ++l) {
-                outStack = attemptExtraction(inventory, stack1, l, side, useOre, ignoreDamage, ignoreNBT, doit);
-            }
-        }
-
-        return outStack != null && outStack.stackSize != 0 ? outStack.copy() : null;
-    }
-
-    public static ItemStack attemptExtraction(IInventory inventory, ItemStack stack, int slot, int side, boolean useOre, boolean ignoreDamage, boolean ignoreNBT, boolean doit) {
-        ItemStack slotStack = inventory.getStackInSlot(slot);
-        ItemStack outStack = stack.copy();
-        if (canExtractItemFromInventory(inventory, slotStack, slot, side)) {
-            boolean flag = false;
-            if (areItemStacksEqual(slotStack, stack, useOre, ignoreDamage, ignoreNBT)) {
-                outStack = slotStack.copy();
-                outStack.stackSize = stack.stackSize;
-                int k = stack.stackSize - slotStack.stackSize;
-                if (k >= 0) {
-                    outStack.stackSize -= k;
-                    if (doit) {
-                        slotStack = null;
-                        inventory.setInventorySlotContents(slot, (ItemStack) null);
-                    }
-                } else if (doit) {
-                    slotStack.stackSize -= outStack.stackSize;
-                    inventory.setInventorySlotContents(slot, slotStack);
-                }
-
-                flag = true;
-                if (flag && doit) {
-                    inventory.markDirty();
-                }
-
-                return outStack;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
     public static boolean canInsertItemToInventory(IInventory inventory, ItemStack stack1, int par2, int par3) {
         return stack1 != null && inventory.isItemValidForSlot(par2, stack1) && (!(inventory instanceof ISidedInventory) || ((ISidedInventory) inventory).canInsertItem(par2, stack1, par3));
     }
 
     public static boolean canExtractItemFromInventory(IInventory inventory, ItemStack stack1, int par2, int par3) {
         return stack1 != null && (!(inventory instanceof ISidedInventory) || ((ISidedInventory) inventory).canExtractItem(par2, stack1, par3));
-    }
-
-    public static boolean compareMultipleItems(ItemStack c1, ItemStack[] c2) {
-        if (c1 != null && c1.stackSize > 0) {
-            for (ItemStack is : c2) {
-                if (is != null && c1.isItemEqual(is) && ItemStack.areItemStackTagsEqual(c1, is)) {
-                    return true;
-                }
-            }
-
-            return false;
-        } else {
-            return false;
-        }
     }
 
     public static boolean areItemStacksEqualStrict(ItemStack stack0, ItemStack stack1) {

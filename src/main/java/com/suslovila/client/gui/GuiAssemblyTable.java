@@ -79,11 +79,4 @@ public class GuiAssemblyTable extends GuiContainer {
         return fontRendererObj;
     }
 
-    public int getGuiLeft() {
-        return guiLeft;
-    }
-
-    public int getGuiTop() {
-        return guiTop;
-    }
 }

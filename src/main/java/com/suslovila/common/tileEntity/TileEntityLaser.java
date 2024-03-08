@@ -1,6 +1,7 @@
 package com.suslovila.common.tileEntity;
 
 import com.suslovila.Config;
+import com.suslovila.ExampleMod;
 import com.suslovila.api.ILaserTarget;
 import com.suslovila.api.ILaserTargetBlock;
 import com.suslovila.utils.RotatableHandler;
@@ -9,6 +10,7 @@ import com.suslovila.utils.SusVec3;
 import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergySink;
+import ic2.api.network.INetworkTileEntityEventListener;
 import ic2.core.IC2;
 import ic2.core.block.TileEntityBlock;
 import ic2.core.block.machine.tileentity.TileEntityStandardMachine;
@@ -28,19 +30,15 @@ import java.util.List;
 import java.util.Set;
 
 public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
-    private double euBuffer;
+    private double euBuffer = 0;
     public int euBufferCapacity = Config.laserBufferCapacity;
     private final SafeTimeTracker searchTracker = new SafeTimeTracker(50, 100);
-    public ILaserTarget laserTarget;
-    public ForgeDirection facing = ForgeDirection.DOWN;
-
+    public ILaserTarget laserTarget = null;
     public SusVec3 laserDestinationPos;
-    private boolean addedToEnergyNet;
-
-    private double energyClientDelta;
+    private boolean addedToEnergyNet = false;
 
     protected void updateEntityClient() {
-        
+
     }
 
     protected void updateEntityServer() {
@@ -58,8 +56,8 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
                 markForSync();
             }
         }
-
     }
+
     @Override
     public double getDemandedEnergy() {
         return Math.min(euBufferCapacity - euBuffer, getMaxEnergyPerTick());
@@ -83,7 +81,8 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
 
     @Override
     public boolean acceptsEnergyFrom(TileEntity tileEntity, ForgeDirection forgeDirection) {
-        return forgeDirection != this.facing;
+        //return forgeDirection != this.getFacing();
+        return true;
     }
 
     protected void findTable() {
@@ -93,7 +92,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         int maxX = xCoord + 5;
         int maxY = yCoord + 5;
         int maxZ = zCoord + 5;
-
+        ForgeDirection facing = ForgeDirection.getOrientation(getFacing());
         switch (facing) {
             case WEST:
                 maxX = xCoord;
@@ -172,17 +171,19 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         double energyToSend = Math.min(euBuffer, Config.laserEnergyTransferAmountPerTick);
         double energyLeft = laserTarget.receiveLaserEnergy(this, energyToSend, 1);
         euBuffer = euBuffer - (energyToSend - energyLeft);
-        markForSaveAndSync();
+        markForSave();
         markDirty();
     }
 
+
+    private static final String ENERGY_NBT = ExampleMod.MOD_ID + "energy";
     public void writeCustomNBT(NBTTagCompound rootNbt) {
-        RotatableHandler.writeRotation(rootNbt, facing);
-        if(laserDestinationPos != null) laserDestinationPos.writeToNBT(rootNbt);
+        rootNbt.setDouble(ENERGY_NBT, euBuffer);
+        if (laserDestinationPos != null) laserDestinationPos.writeToNBT(rootNbt);
     }
 
     public void readCustomNBT(NBTTagCompound rootNbt) {
-        facing = RotatableHandler.readRotation(rootNbt);
+        euBuffer = rootNbt.getDouble(ENERGY_NBT);
         laserDestinationPos = SusVec3.fromNbt(rootNbt);
     }
 
@@ -190,6 +191,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         super.readFromNBT(nbttagcompound);
         this.readCustomNBT(nbttagcompound);
     }
+
     public final void writeToNBT(NBTTagCompound nbttagcompound) {
         super.writeToNBT(nbttagcompound);
         this.writeCustomNBT(nbttagcompound);
@@ -199,7 +201,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     public Packet getDescriptionPacket() {
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         this.writeCustomNBT(nbttagcompound);
-        return new S35PacketUpdateTileEntity(this.xCoord, this.yCoord, this.zCoord, -999, nbttagcompound);
+        return new S35PacketUpdateTileEntity(this.xCoord, this.yCoord, this.zCoord, 7, nbttagcompound);
     }
 
     public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
@@ -207,7 +209,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         this.readCustomNBT(pkt.getNbtCompound());
     }
 
-    public void markForSaveAndSync(){
+    public void markForSaveAndSync() {
         markForSave();
         markForSync();
     }
@@ -219,48 +221,24 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     public void markForSync() {
         worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
     }
+
     public void onLoaded() {
         super.onLoaded();
         if (IC2.platform.isSimulating()) {
-            int meta = this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord);
-            if (meta == 4 || meta == 7 || meta == 8) {
-                int newMeta = meta;
-                if (meta == 4) {
-                    newMeta = 3;
-                }
-
-                if (meta == 7 || meta == 8) {
-                    newMeta = 6;
-                }
-
-//                this.cableType = (short)newMeta;
-//                this.worldObj.setBlockMetadataWithNotify(this.xCoord, this.yCoord, this.zCoord, newMeta, 2);
-//                ((ic2.core.network.NetworkManager)IC2.network.get()).updateTileEntityField(this, "cableType");
-            }
-
             MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
             this.addedToEnergyNet = true;
-            //this.onNeighborBlockChange();
-//            if (this.foamed == 1) {
-//                this.changeFoam(this.foamed, true);
-//            }
         }
-
     }
 
     public void onUnloaded() {
+        super.onUnloaded();
         if (IC2.platform.isSimulating() && this.addedToEnergyNet) {
             MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
             this.addedToEnergyNet = false;
         }
-//
-//        if (this.continuousTickCallback != null) {
-//            IC2.tickHandler.removeContinuousTickCallback(this.worldObj, this.continuousTickCallback);
-//            this.continuousTickCallback = null;
-//        }
-
-        super.onUnloaded();
     }
+
+
     @Override
     public boolean shouldRenderInPass(int pass) {
         return pass == 0;
