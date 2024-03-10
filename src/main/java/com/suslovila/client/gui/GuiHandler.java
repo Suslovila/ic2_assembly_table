@@ -18,11 +18,11 @@ public class GuiHandler implements IGuiHandler {
         TileEntity tile = world.getTileEntity(x, y, z);
 
         switch (id) {
-            case GuiIds.ASSEMBLE_TABLE:{
+            case GuiIds.ASSEMBLE_TABLE: {
                 if (!(tile instanceof TileAssemblyTable)) {
                     return null;
                 }
-                return new ContainerAssemblyTable(player.inventory, (TileAssemblyTable)tile);
+                return new ContainerAssemblyTable(player.inventory, (TileAssemblyTable) tile);
 
             }
         }
@@ -38,11 +38,11 @@ public class GuiHandler implements IGuiHandler {
         TileEntity tile = world.getTileEntity(x, y, z);
 
         switch (id) {
-            case GuiIds.ASSEMBLE_TABLE:{
+            case GuiIds.ASSEMBLE_TABLE: {
                 if (!(tile instanceof TileAssemblyTable)) {
                     return null;
                 }
-                return new GuiAssemblyTable(player.inventory, (TileAssemblyTable)tile);
+                return new GuiAssemblyTable(player.inventory, (TileAssemblyTable) tile);
 
             }
         }

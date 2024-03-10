@@ -19,6 +19,8 @@ public class GuiAssemblyTable extends GuiContainer {
     private static final ResourceLocation IMAGE_URL = new ResourceLocation(ExampleMod.MOD_ID, "textures/gui/assembly_table.png");
 
     TileAssemblyTable tile;
+    public static final double energyClientPixels = 70;
+
 
     public GuiAssemblyTable(InventoryPlayer inventoryPlayer, TileAssemblyTable assembleTable) {
         super(new ContainerAssemblyTable(inventoryPlayer, assembleTable));
@@ -34,7 +36,7 @@ public class GuiAssemblyTable extends GuiContainer {
         int l = (this.height - this.ySize) / 2;
         drawTexturedModalRect(k, l, 0, 0, this.xSize, this.ySize);
 
-        int h = tile.getEnergyScaled(70);
+        int h = tile.getEnergyScaled();
 
         drawTexturedModalRect(guiLeft + 86, guiTop + 36 + 70 - h, 176, 18, 4, h);
 
@@ -77,11 +79,4 @@ public class GuiAssemblyTable extends GuiContainer {
         return fontRendererObj;
     }
 
-    public int getGuiLeft() {
-        return guiLeft;
-    }
-
-    public int getGuiTop() {
-        return guiTop;
-    }
 }

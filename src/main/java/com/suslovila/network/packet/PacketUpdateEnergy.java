@@ -13,11 +13,9 @@ public class PacketUpdateEnergy implements IMessage {
     int x;
     int y;
     int z;
-
     double energyAmount;
 
     public PacketUpdateEnergy() {
-
     }
 
     public PacketUpdateEnergy(int x, int y, int z, double energyAmount) {

@@ -49,46 +49,6 @@ public class ContainerAssemblyTable extends Container {
         return this.tile.isUseableByPlayer(player);
     }
 
-    //todo: а как это работает :/ ?
-//    @Override
-//    public ItemStack transferStackInSlot(final EntityPlayer player, final int index) {
-//        ItemStack itemstack = null;
-//        Slot slot = (Slot) this.inventorySlots.get(index);
-//        if(slot instanceof SlotOutput){
-//            return null;
-//        }
-//        if ((slot != null) && slot.getHasStack()) {
-//            final ItemStack itemstack1 = slot.getStack();
-//            itemstack = itemstack1.copy();
-//
-//            final int containerSlotsIndexes = this.inventorySlots.size() - player.inventory.mainInventory.length;
-//            boolean isBlockContainerSlot = index < containerSlotsIndexes;
-//            if (isBlockContainerSlot) {
-//                if (!mergeItemStack(itemstack1, containerSlotsIndexes, this.inventorySlots.size(), true)) {
-//                    return null;
-//                }
-//            } else if (!mergeItemStack(itemstack1, 0, containerSlotsIndexes, false)) {
-//                return null;
-//            }
-//            if (itemstack1.stackSize == 0) {
-//                slot.putStack(null);
-//            } else {
-//                slot.onSlotChanged();
-//            }
-//            if (itemstack1.stackSize == itemstack.stackSize) {
-//                return null;
-//            }
-//            slot.onPickupFromSlot(player, itemstack1);
-//        }
-//        return itemstack;
-//    }
-//
-
-
-
-
-//
-
     protected boolean shiftItemStack(ItemStack stackToShift, int start, int end) {
         boolean changed = false;
         if (stackToShift.isStackable()) {

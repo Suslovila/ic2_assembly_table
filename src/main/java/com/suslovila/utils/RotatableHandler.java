@@ -17,34 +17,42 @@ public class RotatableHandler {
         tag.setByte(TAG_FACING, (byte) facing.ordinal());
     }
 
-//    public static void rotateFromOrientation(ForgeDirection facing) {
-//        switch (facing) {
-//            case (ForgeDirection.DOWN): {
-//            }
-//            case (ForgeDirection.UP): {
-//                glRotatef(180f, 1f, 0f, 0f);
-//            }
-//
-//            case (ForgeDirection.NORTH): {
-//                glRotatef(90f, 1f, 0f, 0f);
-//            }
-//
-//            case (ForgeDirection.SOUTH): {
-//                glRotatef(-90f, 1f, 0f, 0f);
-//            }
-//
-//            case (ForgeDirection.WEST): {
-//                glRotatef(-90f, 0f, 0f, 1f);
-//            }
-//
-//            case (ForgeDirection.EAST): {
-//                glRotatef(90f, 0f, 0f, 1f);
-//            }
-//            default:{}
-//        }
-//    }
+    public static void rotateFromOrientation(ForgeDirection facing) {
+        switch (facing) {
+            case UP: {
+                break;
+            }
+            case DOWN: {
+                glRotatef(180f, 1f, 0f, 0f);
+                break;
+            }
 
-    public static SusVec3 getFacingVector(ForgeDirection facing){
+            case SOUTH: {
+                glRotatef(90f, 1f, 0f, 0f);
+                break;
+            }
+
+            case NORTH: {
+                glRotatef(-90f, 1f, 0f, 0f);
+                break;
+            }
+
+            case EAST: {
+                glRotatef(-90f, 0f, 0f, 1f);
+                break;
+            }
+
+            case WEST: {
+                glRotatef(90f, 0f, 0f, 1f);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    public static SusVec3 getFacingVector(ForgeDirection facing) {
         return SusVec3.getVec3FromForgeDirection(facing);
     }
 }

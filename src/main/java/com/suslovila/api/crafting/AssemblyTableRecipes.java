@@ -2,9 +2,9 @@ package com.suslovila.api.crafting;
 
 import com.suslovila.ExampleMod;
 import net.minecraft.item.ItemStack;
-import scala.actors.threadpool.Arrays;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class AssemblyTableRecipes {
@@ -14,14 +14,16 @@ public class AssemblyTableRecipes {
     public static AssemblyTableRecipes instance() {
         return INSTANCE;
     }
+
     public AssemblyTableRecipe addRecipe(String id, double energyCost, ItemStack res, ItemStack... inputs) throws Exception {
         AssemblyTableRecipe recipe = new AssemblyTableRecipe(energyCost, res, inputs);
-        if(recipes.containsKey(id)){
+        if (recipes.containsKey(id)) {
             throw new Exception(ExampleMod.MOD_ID + ": recipe with id " + id + " is already registered!!!");
         }
         recipes.put(id, recipe);
         return recipe;
     }
+
     private AssemblyTableRecipes() {
     }
 
@@ -31,14 +33,9 @@ public class AssemblyTableRecipes {
         public final double energyCost;
 
         private AssemblyTableRecipe(double cost, ItemStack res, ItemStack... inputs) {
-            this.inputs = new ArrayList<ItemStack>(Arrays.asList(inputs));
+            this.inputs = new ArrayList<>(Arrays.asList(inputs));
             result = res;
             energyCost = cost;
-        }
-
-        private boolean isMatch(ItemStack a, ItemStack b) {
-//            return a.isItemEqual(b)
-            return ((a == null && b == null) || (a != null && b != null && a.getItem() == b.getItem() && (!a.getHasSubtypes() || a.getMetadata() == b.getMetadata())));
         }
     }
 }

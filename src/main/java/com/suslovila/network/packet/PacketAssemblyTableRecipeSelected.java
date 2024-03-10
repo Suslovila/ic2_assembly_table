@@ -14,7 +14,6 @@ public class PacketAssemblyTableRecipeSelected implements IMessage {
     private int x;
     private int y;
     private int z;
-
     int buttonId;
 
     public PacketAssemblyTableRecipeSelected() {
