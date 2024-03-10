@@ -26,8 +26,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import java.util.*;
 
 public class TileAssemblyTable extends TileSynchronised implements ISidedInventory, ILaserTarget {
-    //todo: сделать поля-маркеры на разные виды синхронизации, дабы не вызывать несколько раз одно и то же
-    //todo: вызывать обновление нынешнего паттерна
     SimpleInventory inventory = new SimpleInventory(getSizeInventory(), getOutputSlotsAmount(), "inv", 64);
     private static final int inventorySize = 24;
     private static final int inputSlotsAmount = 12;
