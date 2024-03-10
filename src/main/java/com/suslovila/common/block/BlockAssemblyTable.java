@@ -1,7 +1,7 @@
 package com.suslovila.common.block;
 
 import com.suslovila.ExampleMod;
-import com.suslovila.api.ILaserTargetBlock;
+import com.suslovila.api.lasers.ILaserTargetBlock;
 import com.suslovila.client.GuiIds;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
 import com.suslovila.utils.Utils;
@@ -13,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.world.World;
 
 public class BlockAssemblyTable extends BlockContainer implements ILaserTargetBlock {

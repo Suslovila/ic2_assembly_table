@@ -2,9 +2,9 @@ package com.suslovila.api.crafting;
 
 import com.suslovila.ExampleMod;
 import net.minecraft.item.ItemStack;
-import scala.actors.threadpool.Arrays;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class AssemblyTableRecipes {
@@ -33,7 +33,7 @@ public class AssemblyTableRecipes {
         public final double energyCost;
 
         private AssemblyTableRecipe(double cost, ItemStack res, ItemStack... inputs) {
-            this.inputs = new ArrayList<ItemStack>(Arrays.asList(inputs));
+            this.inputs = new ArrayList<>(Arrays.asList(inputs));
             result = res;
             energyCost = cost;
         }

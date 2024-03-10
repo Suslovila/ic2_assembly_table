@@ -1,19 +1,33 @@
 package com.suslovila.client.render.tile;
 
 import com.suslovila.ExampleMod;
+import com.suslovila.api.lasers.LaserConfig;
 import com.suslovila.common.tileEntity.TileEntityLaser;
+import com.suslovila.utils.GraphicHelper;
+import com.suslovila.utils.RotatableHandler;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.AdvancedModelLoader;
+import net.minecraftforge.client.model.IModelCustom;
+import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.opengl.GL11;
+
+import java.util.ArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class TileLaserRenderer extends TileEntitySpecialRenderer {
-    ResourceLocation texture = new ResourceLocation(ExampleMod.MOD_ID, "textures/misc/wispy.png");
+    static ArrayList<IModelCustom> models = new ArrayList<>();
+
+    static {
+        for (int i = 0; i < LaserConfig.lasers.size(); i++) {
+            models.add(AdvancedModelLoader.loadModel(new ResourceLocation(ExampleMod.MOD_ID, LaserConfig.getByMeta(i).modelPath)));
+        }
+    }
 
     @Override
     public void renderTileEntityAt(TileEntity tile, double x, double y, double z, float partialTicks) {
@@ -21,8 +35,12 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         TileEntityLaser tileLaser = (TileEntityLaser) tile;
         //renderLaser(tileLaser, x, y, z, partialTicks);
         glPushMatrix();
-        renderLaser(tileLaser, x, y, z, partialTicks);
-        //glTranslated(x + 0.5, y + 0.5, z + 0.5);
+        //renderLaser(tileLaser, x, y, z, partialTicks);
+        glTranslated(x + 0.5, y + 0.5, z + 0.5);
+        GraphicHelper.bindTexture(new ResourceLocation(ExampleMod.MOD_ID, LaserConfig.getByMeta(tileLaser.meta).texturePath));
+        RotatableHandler.rotateFromOrientation(ForgeDirection.getOrientation(tileLaser.getFacing()));
+        glScaled(0.5, 0.5, 0.5);
+        models.get(tileLaser.meta).renderAll();
         glPopMatrix();
     }
 
@@ -51,7 +69,7 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         float f1 = 0.001f;
         Tessellator tessellator = Tessellator.instance;
         // glRotatef(90, 1,0,0);
-        this.bindTexture(texture);
+        //this.bindTexture(texture);
         GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, 10497.0F);
         GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, 10497.0F);
         GL11.glDisable(GL11.GL_LIGHTING);

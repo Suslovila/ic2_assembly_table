@@ -6,7 +6,7 @@
  * Please check the contents of the license, which should be located
  * as "LICENSE.API" in the BuildCraft source code distribution.
  */
-package com.suslovila.api;
+package com.suslovila.api.lasers;
 
 import com.suslovila.common.tileEntity.TileEntityLaser;
 import com.suslovila.utils.SusVec3;

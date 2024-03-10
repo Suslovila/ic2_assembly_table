@@ -1,0 +1,10 @@
+[
+  {
+    "meta": 0,
+    "name": "slow",
+    "texturePath": "textures/blocks/slow.png",
+    "modelPath": "models/blocks/slow.obj",
+    "euBufferCapacity": 10000.0,
+    "euPerTick": 10.0
+  }
+]

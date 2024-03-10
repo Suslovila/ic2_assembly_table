@@ -1,6 +1,6 @@
 package com.suslovila.common.tileEntity;
 
-import com.suslovila.api.ILaserTarget;
+import com.suslovila.api.lasers.ILaserTarget;
 import com.suslovila.api.crafting.AssemblyTableRecipes;
 import com.suslovila.client.gui.GuiAssemblyTable;
 import com.suslovila.common.inventory.container.SimpleInventory;
@@ -13,7 +13,6 @@ import com.suslovila.utils.collection.CollectionUtils;
 import com.suslovila.utils.nbt.INBTStoreable;
 import com.suslovila.utils.nbt.NBTHelper;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import ic2.api.energy.tile.IEnergySink;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -41,9 +40,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     private double energyClientDelta = 0;
     private final double energyClientPixels = GuiAssemblyTable.energyClientPixels;
 
-    public ForgeDirection facing = ForgeDirection.DOWN;
-    public boolean active = false;
-
     public TileAssemblyTable() {
         super();
         inventory.addListener(this);
@@ -69,8 +65,8 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
 
 
     //excludedRecipes will not be added while this check (used to walk throw available recipes)
-    public void updateAvailablePatterns(Collection<String> excludedRecipes) {
-        if (worldObj.isRemote) return;
+    public boolean updateAvailablePatterns(Collection<String> excludedRecipes) {
+        if (worldObj.isRemote) return false;
         boolean changed = false;
         List<AssemblyTablePattern> copyPatterns = new ArrayList<>(patterns);
         for (int i = 0; i < copyPatterns.size(); i++) {
@@ -91,6 +87,7 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (changed) {
             markForSaveAndForcePatterns();
         }
+        return changed;
     }
 
 
@@ -123,21 +120,17 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     private void outPutCraftingResult(AssemblyTableRecipes.AssemblyTableRecipe recipe) {
         if (worldObj.isRemote) return;
         ItemStack toOutput = recipe.result.copy();
-        List<Integer> offsets = Arrays.asList(-1, 0, 1);
-        for (int xOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
-            for (int yOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
-                for (int zOffset : CollectionUtils.shuffle(new ArrayList<>(offsets))) {
-                    if (xOffset == 0 && yOffset == 0 && zOffset == 0) {
-                        continue;
-                    }
-                    TileEntity tile = worldObj.getTileEntity(xCoord + xOffset, yCoord + yOffset, zCoord + zOffset);
-                    if (tile instanceof IInventory) {
-                        toOutput = InventoryUtils.placeItemStackIntoInventory(toOutput, (IInventory) tile, -1, true, false, 0);
-                        //if empty
-                        if (toOutput == null) {
-                            return;
-                        }
-                    }
+        List<ForgeDirection> offsets = Arrays.asList(Arrays.copyOf(ForgeDirection.VALID_DIRECTIONS, ForgeDirection.VALID_DIRECTIONS.length));
+        Collections.shuffle(offsets);
+        for (int i = 0; i < offsets.size(); i++) {
+            ForgeDirection offset = offsets.get(i);
+            TileEntity tile = worldObj.getTileEntity(xCoord + offset.offsetX, yCoord + offset.offsetY, zCoord + offset.offsetZ);
+            if (tile instanceof IInventory) {
+                int side = offset.getOpposite().ordinal();
+                toOutput = InventoryUtils.placeItemStackIntoInventory(toOutput, (IInventory) tile, side, true, false, 0);
+                //if empty
+                if (toOutput == null) {
+                    return;
                 }
             }
         }
@@ -146,10 +139,11 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         if (toOutput == null) {
             return;
         }
-        EntityItem entityitem = new EntityItem(worldObj, xCoord + 0.5, yCoord + 0.7, zCoord + 0.5,
-                toOutput);
+
+        EntityItem entityitem = new EntityItem(worldObj, xCoord + 0.5, yCoord + 0.7, zCoord + 0.5, toOutput);
         worldObj.spawnEntityInWorld(entityitem);
     }
+
 
     public boolean canStillCraft(String recipeId) {
         AssemblyTableRecipes.AssemblyTableRecipe recipe = AssemblyTableRecipes.instance().recipes.get(recipeId);
@@ -161,75 +155,6 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
         return recipe.inputs.stream().allMatch(stack -> this.inventory.hasEnough(stack));
     }
 
-
-    @Override
-    public int getSizeInventory() {
-        return inventorySize;
-    }
-
-    @Override
-    public void setInventorySlotContents(int slot, ItemStack stack) {
-        inventory.setInventorySlotContents(slot, stack);
-    }
-
-    @Override
-    public String getInventoryName() {
-        return ("tile.assemblyTableBlock.name");
-    }
-
-    @Override
-    public ItemStack getStackInSlot(int slot) {
-        return inventory.getStackInSlot(slot);
-    }
-
-    @Override
-    public ItemStack decrStackSize(int slot, int amount) {
-        return inventory.decrStackSize(slot, amount);
-    }
-
-    @Override
-    public ItemStack getStackInSlotOnClosing(int slot) {
-        return inventory.getStackInSlotOnClosing(slot);
-    }
-
-
-    @Override
-    public int getInventoryStackLimit() {
-        return inventory.getInventoryStackLimit();
-    }
-
-    @Override
-    public boolean isUseableByPlayer(EntityPlayer player) {
-        return worldObj.getTileEntity(xCoord, yCoord, zCoord) == this && !isInvalid() &&
-                (player.getDistanceSq(this.xCoord + 0.5D, this.yCoord + 0.5D, this.zCoord + 0.5D) <= maxAvailableDistanceToPlayer);
-    }
-
-    public void openChest() {
-    }
-
-    @Override
-    public void closeChest() {
-    }
-
-    @Override
-    public boolean isCustomInventoryName() {
-        return false;
-    }
-
-    @Override
-    public boolean isItemValidForSlot(int slot, ItemStack stack) {
-        return inventory.isItemValidForSlot(slot, stack);
-    }
-
-    public int getInputSlotAmount() {
-        return inputSlotsAmount;
-    }
-
-    public int getOutputSlotsAmount() {
-        return getSizeInventory() - getInputSlotAmount();
-    }
-
-
     public boolean canAddMorePatterns() {
         return patterns.size() < patternAmount;
     }
@@ -237,10 +162,15 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     //removes pattern and updates patterns (removed pattern is forbidden while update in order to roll through patterns)
     public String removePatternWithUpdate(int index) {
         String removed = removePatternNoUpdate(index);
-        updateAvailablePatterns(Collections.singletonList(removed));
-        updateAvailablePatterns(new ArrayList<>());
-        //we do not sync patterns here in order to prevent pattern "blinking"
-
+        //rolling through
+        boolean changed = updateAvailablePatterns(Collections.singletonList(removed));
+        //double check if nothing changed (getting removed recipe back to screen without blinking in gui)
+        if (!changed) {
+            changed = updateAvailablePatterns(new ArrayList<>());
+            if (!changed) {
+                markForSaveAndForcePatterns();
+            }
+        }
         return removed;
     }
 
@@ -350,6 +280,75 @@ public class TileAssemblyTable extends TileSynchronised implements ISidedInvento
     public int getEnergyScaled() {
         return (int) (euBuffer / euBufferCapacity * energyClientPixels);
     }
+
+
+    @Override
+    public int getSizeInventory() {
+        return inventorySize;
+    }
+
+    @Override
+    public void setInventorySlotContents(int slot, ItemStack stack) {
+        inventory.setInventorySlotContents(slot, stack);
+    }
+
+    @Override
+    public String getInventoryName() {
+        return ("tile.assemblyTableBlock.name");
+    }
+
+    @Override
+    public ItemStack getStackInSlot(int slot) {
+        return inventory.getStackInSlot(slot);
+    }
+
+    @Override
+    public ItemStack decrStackSize(int slot, int amount) {
+        return inventory.decrStackSize(slot, amount);
+    }
+
+    @Override
+    public ItemStack getStackInSlotOnClosing(int slot) {
+        return inventory.getStackInSlotOnClosing(slot);
+    }
+
+
+    @Override
+    public int getInventoryStackLimit() {
+        return inventory.getInventoryStackLimit();
+    }
+
+    @Override
+    public boolean isUseableByPlayer(EntityPlayer player) {
+        return worldObj.getTileEntity(xCoord, yCoord, zCoord) == this && !isInvalid() &&
+                (player.getDistanceSq(this.xCoord + 0.5D, this.yCoord + 0.5D, this.zCoord + 0.5D) <= maxAvailableDistanceToPlayer);
+    }
+
+    public void openChest() {
+    }
+
+    @Override
+    public void closeChest() {
+    }
+
+    @Override
+    public boolean isCustomInventoryName() {
+        return false;
+    }
+
+    @Override
+    public boolean isItemValidForSlot(int slot, ItemStack stack) {
+        return inventory.isItemValidForSlot(slot, stack);
+    }
+
+    public int getInputSlotAmount() {
+        return inputSlotsAmount;
+    }
+
+    public int getOutputSlotsAmount() {
+        return getSizeInventory() - getInputSlotAmount();
+    }
+
 
     @Override
     public int[] getSlotsForFace(int side) {

@@ -2,21 +2,16 @@ package com.suslovila.common.tileEntity;
 
 import com.suslovila.Config;
 import com.suslovila.ExampleMod;
-import com.suslovila.api.ILaserTarget;
-import com.suslovila.api.ILaserTargetBlock;
-import com.suslovila.utils.RotatableHandler;
+import com.suslovila.api.lasers.ILaserTarget;
+import com.suslovila.api.lasers.ILaserTargetBlock;
+import com.suslovila.api.lasers.LaserConfig;
 import com.suslovila.utils.SafeTimeTracker;
 import com.suslovila.utils.SusVec3;
 import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergySink;
-import ic2.api.network.INetworkTileEntityEventListener;
 import ic2.core.IC2;
 import ic2.core.block.TileEntityBlock;
-import ic2.core.block.machine.tileentity.TileEntityStandardMachine;
-import ic2.core.upgrade.UpgradableProperty;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
@@ -27,15 +22,40 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     private double euBuffer = 0;
-    public int euBufferCapacity = Config.laserBufferCapacity;
     private final SafeTimeTracker searchTracker = new SafeTimeTracker(50, 100);
     public ILaserTarget laserTarget = null;
     public SusVec3 laserDestinationPos;
     private boolean addedToEnergyNet = false;
+    public int meta;
+
+    public TileEntityLaser(int meta) {
+        super();
+        this.meta = meta;
+    }
+
+    public TileEntityLaser() {
+        super();
+    }
+
+    public void onLoaded() {
+        super.onLoaded();
+        if (IC2.platform.isSimulating()) {
+            MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
+            this.addedToEnergyNet = true;
+        }
+    }
+
+    public void onUnloaded() {
+        super.onUnloaded();
+        if (IC2.platform.isSimulating() && this.addedToEnergyNet) {
+            MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
+            this.addedToEnergyNet = false;
+        }
+    }
+
 
     protected void updateEntityClient() {
 
@@ -47,7 +67,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         }
 
         if (laserTarget != null) {
-            if (!laserTarget.requiresLaserEnergy()) {
+            if (!laserTarget.requiresLaserEnergy() || !isValidTable()) {
                 laserTarget = null;
                 laserDestinationPos = null;
             } else {
@@ -58,13 +78,14 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         }
     }
 
+
     @Override
     public double getDemandedEnergy() {
-        return Math.min(euBufferCapacity - euBuffer, getMaxEnergyPerTick());
+        return Math.min(getEUBufferCapacity() - euBuffer, getMaxEnergyPerTick());
     }
 
     public double getMaxEnergyPerTick() {
-        return Config.laserEnergyTransferAmountPerTick;
+        return getEUPerTick();
     }
 
     @Override
@@ -74,15 +95,16 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
 
     @Override
     public double injectEnergy(ForgeDirection forgeDirection, double amount, double voltage) {
-        double toAdd = Math.min(amount, (double) this.euBufferCapacity - this.euBuffer);
+        double toAdd = Math.min(amount, (double) this.getEUBufferCapacity() - this.euBuffer);
         this.euBuffer += toAdd;
+        markDirty();
+        markForSave();
         return amount - toAdd;
     }
 
     @Override
     public boolean acceptsEnergyFrom(TileEntity tileEntity, ForgeDirection forgeDirection) {
-        //return forgeDirection != this.getFacing();
-        return true;
+        return forgeDirection.ordinal() != (int) this.getFacing();
     }
 
     protected void findTable() {
@@ -168,7 +190,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     }
 
     public void sendEnergy() {
-        double energyToSend = Math.min(euBuffer, Config.laserEnergyTransferAmountPerTick);
+        double energyToSend = Math.min(euBuffer, getEUPerTick());
         double energyLeft = laserTarget.receiveLaserEnergy(this, energyToSend, 1);
         euBuffer = euBuffer - (energyToSend - energyLeft);
         markForSave();
@@ -177,13 +199,18 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
 
 
     private static final String ENERGY_NBT = ExampleMod.MOD_ID + "energy";
+    private static final String META_NBT = ExampleMod.MOD_ID + "meta";
+
+
     public void writeCustomNBT(NBTTagCompound rootNbt) {
         rootNbt.setDouble(ENERGY_NBT, euBuffer);
+        rootNbt.setInteger(META_NBT, meta);
         if (laserDestinationPos != null) laserDestinationPos.writeToNBT(rootNbt);
     }
 
     public void readCustomNBT(NBTTagCompound rootNbt) {
         euBuffer = rootNbt.getDouble(ENERGY_NBT);
+        meta = rootNbt.getInteger(META_NBT);
         laserDestinationPos = SusVec3.fromNbt(rootNbt);
     }
 
@@ -222,26 +249,18 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
     }
 
-    public void onLoaded() {
-        super.onLoaded();
-        if (IC2.platform.isSimulating()) {
-            MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
-            this.addedToEnergyNet = true;
-        }
-    }
-
-    public void onUnloaded() {
-        super.onUnloaded();
-        if (IC2.platform.isSimulating() && this.addedToEnergyNet) {
-            MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
-            this.addedToEnergyNet = false;
-        }
-    }
-
 
     @Override
     public boolean shouldRenderInPass(int pass) {
         return pass == 0;
+    }
+
+    public double getEUBufferCapacity() {
+        return LaserConfig.getByMeta(meta).euBufferCapacity;
+    }
+
+    public double getEUPerTick() {
+        return LaserConfig.getByMeta(meta).euPerTick;
     }
 
 }

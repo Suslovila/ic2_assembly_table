@@ -15,13 +15,22 @@ import net.minecraft.world.World;
 import org.apache.commons.lang3.mutable.MutableObject;
 
 public class BlockLaser extends BlockContainer {
-    protected BlockLaser(InternalName name) {
+
+//    public BlockLaser(String name, String texturePath, String modelPath, double euBufferCapacity, double euPerTick) {
+//        super(Material.iron);
+//    }
+
+    protected BlockLaser() {
         super(Material.iron);
     }
 
-    public TileEntity createNewTileEntity(World world, int metadata){
-        return new TileEntityLaser();
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        if (metadata < ModBlocks.lasers.size()) {
+            return new TileEntityLaser(metadata);
+        }
+        return null;
     }
+
     public boolean isOpaqueCube() {
         return false;
     }
