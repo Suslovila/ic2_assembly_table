@@ -41,42 +41,35 @@ public class BlockAssemblyTable extends BlockContainer implements ILaserTargetBl
         return false;
     }
 
-    public void breakBlock(World world, int x, int y, int z, Block blockBroken, int meta)
-    {
+    public void breakBlock(World world, int x, int y, int z, Block blockBroken, int meta) {
         TileEntity tile = world.getTileEntity(x, y, z);
 
-        if (tile instanceof TileAssemblyTable)
-        {
-            TileAssemblyTable table = (TileAssemblyTable)tile;
-            for (int itemIndex = 0; itemIndex < table.getSizeInventory(); ++itemIndex)
-            {
+        if (tile instanceof TileAssemblyTable) {
+            TileAssemblyTable table = (TileAssemblyTable) tile;
+            for (int itemIndex = 0; itemIndex < table.getSizeInventory(); ++itemIndex) {
                 ItemStack itemstack = table.getStackInSlot(itemIndex);
 
-                if (itemstack != null)
-                {
+                if (itemstack != null) {
                     float xOffset = Utils.random.nextFloat() * 0.8F + 0.1F;
                     float yOffset = Utils.random.nextFloat() * 0.8F + 0.1F;
                     EntityItem entityitem;
 
-                    for (float singleItemIterate = Utils.random.nextFloat() * 0.8F + 0.1F; itemstack.stackSize > 0; world.spawnEntityInWorld(entityitem))
-                    {
+                    for (float singleItemIterate = Utils.random.nextFloat() * 0.8F + 0.1F; itemstack.stackSize > 0; world.spawnEntityInWorld(entityitem)) {
                         int stackSiseDecrease = Utils.random.nextInt(21) + 10;
 
-                        if (stackSiseDecrease > itemstack.stackSize)
-                        {
+                        if (stackSiseDecrease > itemstack.stackSize) {
                             stackSiseDecrease = itemstack.stackSize;
                         }
 
                         itemstack.stackSize -= stackSiseDecrease;
-                        entityitem = new EntityItem(world, (float)x + xOffset, (float)y + yOffset, (float)z + singleItemIterate, new ItemStack(itemstack.getItem(), stackSiseDecrease, itemstack.getMetadata()));
+                        entityitem = new EntityItem(world, (float) x + xOffset, (float) y + yOffset, (float) z + singleItemIterate, new ItemStack(itemstack.getItem(), stackSiseDecrease, itemstack.getMetadata()));
                         float f3 = 0.05F;
-                        entityitem.motionX = (float)Utils.random.nextGaussian() * f3;
-                        entityitem.motionY = (float)Utils.random.nextGaussian() * f3 + 0.2F;
-                        entityitem.motionZ = (float)Utils.random.nextGaussian() * f3;
+                        entityitem.motionX = (float) Utils.random.nextGaussian() * f3;
+                        entityitem.motionY = (float) Utils.random.nextGaussian() * f3 + 0.2F;
+                        entityitem.motionZ = (float) Utils.random.nextGaussian() * f3;
 
-                        if (itemstack.hasTagCompound())
-                        {
-                            entityitem.getEntityItem().setTagCompound((NBTTagCompound)itemstack.getTagCompound().copy());
+                        if (itemstack.hasTagCompound()) {
+                            entityitem.getEntityItem().setTagCompound((NBTTagCompound) itemstack.getTagCompound().copy());
                         }
                     }
                 }

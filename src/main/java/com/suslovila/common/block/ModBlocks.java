@@ -28,7 +28,5 @@ public class ModBlocks {
     }
 
     public static void registerRender() {
-        //exampleRenderID = RenderingRegistry.getNextAvailableRenderId();
-
     }
 }

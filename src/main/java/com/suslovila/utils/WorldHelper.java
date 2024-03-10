@@ -9,8 +9,6 @@ import java.util.HashSet;
 
 public class WorldHelper {
     public static boolean areBlocksBetween(SusVec3 posFrom, SusVec3 posTo, World world) {
-//        MovingObjectPosition rayTrace = world.rayTraceBlocks(posFrom.toVec3(), posTo.toVec3());
-//        return rayTrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK;
         HashSet<SusPosition> poses = new HashSet<>(Arrays.asList(posFrom.toSusPos(), posTo.toSusPos()));
         SusVec3 delta = posTo.subtract(posFrom);
         SusVec3 ort = delta.normalize();

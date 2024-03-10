@@ -33,10 +33,6 @@ public class ClientProxy extends CommonProxy {
         setupItemRenderers();
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLaser.class, new TileLaserRenderer());
-
-
-        // RenderingRegistry.registerBlockHandler(BlockRenderer())
-
     }
 
 
@@ -50,7 +46,6 @@ public class ClientProxy extends CommonProxy {
     }
 
     private void setupItemRenderers() {
-        //MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(block), ItemRenderer())
     }
 
     public World getClientWorld() {

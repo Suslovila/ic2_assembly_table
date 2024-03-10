@@ -47,24 +47,6 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         glPopMatrix();
     }
 
-//    private void renderLaser(TileEntityLaser tileLaser, double x, double y, double z, float partialTicks) {
-//        //if (tileLaser.laserDestinationPos == null) return;
-//        float time = GraphicHelper.getTimeForRender(partialTicks);
-//        GraphicHelper.drawFloatyLine(
-//                tileLaser.xCoord,
-//                tileLaser.yCoord,
-//                tileLaser.zCoord,
-//                tileLaser.laserDestinationPos.x,
-//                tileLaser.laserDestinationPos.y,
-//                tileLaser.laserDestinationPos.z,
-//                time,
-//                45345,
-//                "textures/misc/wispy.png",
-//                0.1f,
-//                Math.min(time, 10.0f) / 10.0f,
-//                0.15f
-//        );
-//    }
 
 
     //method for future plans with beam render

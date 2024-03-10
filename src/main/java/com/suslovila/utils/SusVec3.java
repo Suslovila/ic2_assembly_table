@@ -233,11 +233,6 @@ public class SusVec3 implements INBTStoreable {
 
     }
 
-    public static SusVec3 getVectorFromArrayList(ArrayList<Double> arrayList) throws Exception {
-        if (arrayList.size() != 3) throw new Exception("Can not create Vector from array because length is not 3");
-        return new SusVec3(arrayList.get(0), arrayList.get(1), arrayList.get(2));
-    }
-
     public static SusVec3 getVec3FromForgeDirection(ForgeDirection direction) {
         return new SusVec3(direction.offsetX, direction.offsetY, direction.offsetZ);
     }
