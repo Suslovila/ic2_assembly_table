@@ -19,30 +19,30 @@ public class RotatableHandler {
 
     public static void rotateFromOrientation(ForgeDirection facing) {
         switch (facing) {
-            case DOWN: {
+            case UP: {
                 break;
             }
-            case UP: {
+            case DOWN: {
                 glRotatef(180f, 1f, 0f, 0f);
                 break;
             }
 
-            case NORTH: {
+            case SOUTH: {
                 glRotatef(90f, 1f, 0f, 0f);
                 break;
             }
 
-            case SOUTH: {
+            case NORTH: {
                 glRotatef(-90f, 1f, 0f, 0f);
                 break;
             }
 
-            case WEST: {
+            case EAST: {
                 glRotatef(-90f, 0f, 0f, 1f);
                 break;
             }
 
-            case EAST: {
+            case WEST: {
                 glRotatef(90f, 0f, 0f, 1f);
                 break;
             }

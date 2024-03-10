@@ -1,7 +1,6 @@
 package com.suslovila.api.lasers;
 
 public class WrappedLaser {
-    //id is equal to metadata!
     public int meta;
 
     public String name;

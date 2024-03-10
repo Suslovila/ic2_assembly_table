@@ -25,7 +25,7 @@ public class BlockLaserItem extends ItemBlock {
         if (placed) {
             try {
                 TileEntityLaser laser = (TileEntityLaser) world.getTileEntity(x, y, z);
-                laser.setFacing((short) ForgeDirection.getOrientation(side).getOpposite().ordinal());
+                laser.setFacing((short) ForgeDirection.getOrientation(side).ordinal());
                 laser.markDirty();
                 world.markBlockForUpdate(x, y, z);
             } catch (Exception exception) {

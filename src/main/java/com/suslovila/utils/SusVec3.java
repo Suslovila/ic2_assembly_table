@@ -4,6 +4,7 @@ package com.suslovila.utils;
 import com.suslovila.ExampleMod;
 import com.suslovila.utils.nbt.INBTStoreable;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.ArrayList;
@@ -253,7 +254,6 @@ public class SusVec3 implements INBTStoreable {
     }
 
 
-
     private static final String X_NBT = ExampleMod.MOD_ID + "x";
     private static final String Y_NBT = ExampleMod.MOD_ID + "y";
     private static final String Z_NBT = ExampleMod.MOD_ID + "z";
@@ -279,5 +279,16 @@ public class SusVec3 implements INBTStoreable {
                 rootNbt.getDouble(Y_NBT),
                 rootNbt.getDouble(Z_NBT)
         );
+    }
+
+    public static SusVec3 fromVec3(Vec3 vec3) {
+        return new SusVec3(vec3.xCoord, vec3.yCoord, vec3.zCoord);
+    }
+
+    public Vec3 toVec3() {
+        return Vec3.createVectorHelper(x, y, z);
+    }
+    public SusPosition toSusPos() {
+        return new SusPosition((int) x, (int) y, (int) z);
     }
 }

@@ -21,11 +21,14 @@ import java.util.ArrayList;
 import static org.lwjgl.opengl.GL11.*;
 
 public class TileLaserRenderer extends TileEntitySpecialRenderer {
-    static ArrayList<IModelCustom> models = new ArrayList<>();
+    public static ArrayList<IModelCustom> models = new ArrayList<>();
+    public static ArrayList<ResourceLocation> textures = new ArrayList<>();
+
 
     static {
         for (int i = 0; i < LaserConfig.lasers.size(); i++) {
             models.add(AdvancedModelLoader.loadModel(new ResourceLocation(ExampleMod.MOD_ID, LaserConfig.getByMeta(i).modelPath)));
+            textures.add(new ResourceLocation(ExampleMod.MOD_ID, LaserConfig.getByMeta(i).texturePath));
         }
     }
 
@@ -37,7 +40,7 @@ public class TileLaserRenderer extends TileEntitySpecialRenderer {
         glPushMatrix();
         //renderLaser(tileLaser, x, y, z, partialTicks);
         glTranslated(x + 0.5, y + 0.5, z + 0.5);
-        GraphicHelper.bindTexture(new ResourceLocation(ExampleMod.MOD_ID, LaserConfig.getByMeta(tileLaser.meta).texturePath));
+        GraphicHelper.bindTexture(textures.get(tileLaser.meta));
         RotatableHandler.rotateFromOrientation(ForgeDirection.getOrientation(tileLaser.getFacing()));
         glScaled(0.5, 0.5, 0.5);
         models.get(tileLaser.meta).renderAll();

@@ -5,8 +5,10 @@ import com.suslovila.ExampleMod;
 import com.suslovila.api.lasers.ILaserTarget;
 import com.suslovila.api.lasers.ILaserTargetBlock;
 import com.suslovila.api.lasers.LaserConfig;
+import com.suslovila.api.lasers.WrappedLaser;
 import com.suslovila.utils.SafeTimeTracker;
 import com.suslovila.utils.SusVec3;
+import com.suslovila.utils.WorldHelper;
 import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergySink;
@@ -20,12 +22,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     private double euBuffer = 0;
-    private final SafeTimeTracker searchTracker = new SafeTimeTracker(50, 100);
+    private final SafeTimeTracker searchTracker = new SafeTimeTracker(25, 50);
     public ILaserTarget laserTarget = null;
     public SusVec3 laserDestinationPos;
     private boolean addedToEnergyNet = false;
@@ -62,18 +65,21 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
     }
 
     protected void updateEntityServer() {
-        if (canFindTable()) {
-            findTable();
-        }
-
         if (laserTarget != null) {
             if (!laserTarget.requiresLaserEnergy() || !isValidTable()) {
                 laserTarget = null;
                 laserDestinationPos = null;
+                if (canFindTable()) {
+                    findTable();
+                }
             } else {
                 sendEnergy();
                 laserDestinationPos = laserTarget.getLaserStreamPos();
                 markForSync();
+            }
+        } else {
+            if (canFindTable()) {
+                findTable();
             }
         }
     }
@@ -95,7 +101,7 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
 
     @Override
     public double injectEnergy(ForgeDirection forgeDirection, double amount, double voltage) {
-        double toAdd = Math.min(amount, (double) this.getEUBufferCapacity() - this.euBuffer);
+        double toAdd = Math.min(amount, Math.min(getMaxEnergyPerTick(), this.getEUBufferCapacity() - this.euBuffer));
         this.euBuffer += toAdd;
         markDirty();
         markForSave();
@@ -150,6 +156,8 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
             for (int x = minX; x <= maxX; ++x) {
                 for (int z = minZ; z <= maxZ; ++z) {
                     if (worldObj.getBlock(x, y, z) instanceof ILaserTargetBlock) {
+                        boolean areBlocksBetween = WorldHelper.areBlocksBetween(new SusVec3(xCoord, yCoord, zCoord), new SusVec3(x, y, z), worldObj);
+                        if (areBlocksBetween) continue;
                         TileEntity tile = worldObj.getTileEntity(x, y, z);
 
                         if (tile instanceof ILaserTarget) {
@@ -181,7 +189,8 @@ public class TileEntityLaser extends TileEntityBlock implements IEnergySink {
         if (laserTarget == null || !laserTarget.isValidTarget() || !laserTarget.requiresLaserEnergy()) {
             return false;
         }
-
+        boolean areBlocksBetween = WorldHelper.areBlocksBetween(new SusVec3(xCoord, yCoord, zCoord), laserTarget.getLaserStreamPos(), worldObj);
+        if (areBlocksBetween) return false;
         return true;
     }
 

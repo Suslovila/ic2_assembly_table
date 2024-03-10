@@ -2,6 +2,7 @@ package com.suslovila.client;
 
 
 import com.suslovila.client.render.ClientEventHandler;
+import com.suslovila.client.render.item.ItemBlockLaserRenderer;
 import com.suslovila.client.render.tile.TileLaserRenderer;
 import com.suslovila.common.CommonProxy;
 import com.suslovila.common.block.ModBlocks;
@@ -45,7 +46,7 @@ public class ClientProxy extends CommonProxy {
 
     public void registerRenderers() {
         MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
-        //MinecraftForgeClient.registerItemRenderer(ModItems.item, CustomItemRenderer)
+        MinecraftForgeClient.registerItemRenderer(Item.getItemFromBlock(ModBlocks.laser), new ItemBlockLaserRenderer());
     }
 
     private void setupItemRenderers() {

@@ -1,6 +1,7 @@
 package com.suslovila.common.block;
 
 import com.suslovila.ExampleMod;
+import com.suslovila.api.lasers.LaserConfig;
 import com.suslovila.client.GuiIds;
 import com.suslovila.common.tileEntity.TileAssemblyTable;
 import com.suslovila.common.tileEntity.TileEntityLaser;
@@ -25,7 +26,7 @@ public class BlockLaser extends BlockContainer {
     }
 
     public TileEntity createNewTileEntity(World world, int metadata) {
-        if (metadata < ModBlocks.lasers.size()) {
+        if (metadata < LaserConfig.lasers.size()) {
             return new TileEntityLaser(metadata);
         }
         return null;
