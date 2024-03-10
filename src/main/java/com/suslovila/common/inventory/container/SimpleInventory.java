@@ -122,7 +122,6 @@ public class SimpleInventory implements IInventory, INBTStoreable {
             }
         }
         data.setTag(tag, slots);
-        //data.setInteger(OUTPUT_SLOT_INDEX_NBT, firstOutPutSlotIndex);
     }
 
 
@@ -148,7 +147,6 @@ public class SimpleInventory implements IInventory, INBTStoreable {
                 setInventorySlotContents(index, ItemStack.loadItemStackFromNBT(slotNbt));
             }
         }
-        //firstOutPutSlotIndex = data.getInteger(OUTPUT_SLOT_INDEX_NBT);
     }
 
 

@@ -20,7 +20,6 @@ public class CommonProxy {
         Config.registerServerConfig(event.getSuggestedConfigurationFile());
         FMLCommonHandler.instance().bus().register(FMLEventListener.getInstance());
         MinecraftForge.EVENT_BUS.register(FMLEventListener.getInstance());
-        //MinecraftForge.EVENT_BUS.register(SweetMixinListener());
         ModBlocks.register();
         ModItems.register();
         PacketHandler.init();
